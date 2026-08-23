@@ -391,7 +391,58 @@
       { id: nid(), title: '司法部发布公共法律服务体系建设新规', date: '2025-03-28', tags: ['司法行政', '公共服务'], summary: '强化基层法律服务供给，推进公共法律服务均衡化。' },
       { id: nid(), title: '最高检通报涉未成年人司法保护典型案例', date: '2025-03-19', tags: ['未成年人保护', '检察'], summary: '聚焦校园安全与家庭监护责任，释放从严保护信号。' },
       { id: nid(), title: '多部门联合开展劳动用工合规专项整治', date: '2025-02-14', tags: ['劳动法', '合规'], summary: '重点整治欠薪、超时加班和用工合同不规范等问题。' },
-      { id: nid(), title: '全国法院推进多元解纷机制数字化升级', date: '2025-01-22', tags: ['司法改革', '数字化'], summary: '通过线上调解平台提升纠纷解决效率与可及性。' }
+      { id: nid(), title: '全国法院推进多元解纷机制数字化升级', date: '2025-01-22', tags: ['司法改革', '数字化'], summary: '通过线上调解平台提升纠纷解决效率与可及性。' },
+      // ── 法治头条：真实 2026 权威要闻（含原文链接与配图）──
+      { id: nid(), title: '生态环境法典正式施行 我国继民法典之后第二部法典', date: '2026-08-15',
+        tags: ['立法', '法典', '生态环境'],
+        summary: '《中华人民共和国生态环境法典》自2026年8月15日起施行，共5编1242条，依次为总则、污染防治、生态保护、绿色低碳发展、法律责任和附则，环境保护法等10部法律同时废止。',
+        source: 'https://news.enorth.com.cn/system/2026/03/13/059220371.shtml', sourceName: '北方网·新华鲜报',
+        img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '“两高”修改涉生态环境领域两件司法解释 自8月15日起施行', date: '2026-08-08',
+        tags: ['司法解释', '生态环境', '两高'],
+        summary: '为贯彻实施生态环境法典，“两高”联合决定修改海洋生态环境公益诉讼、环境污染刑事案件两件司法解释，明确检察机关可向海事法院提起民事公益诉讼等要求。',
+        source: 'https://www.jcrb.com/jc/202608/t20260808_916588.html', sourceName: '正义网',
+        img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '“两高”发布非法占用耕地司法解释：对非法占用耕地“零容忍”', date: '2026-05-11',
+        tags: ['司法解释', '耕地保护', '自然资源'],
+        summary: '两高联合发布《关于办理非法占用耕地案件适用法律若干问题的规定》。发布会披露：依法起诉非法占用农用地犯罪9800余人，督促复垦耕地25.2万亩，督促缴纳耕地修复费用16.05亿元。',
+        source: 'https://www.gdzf.org.cn/index/zfyw/content/post_197345.html', sourceName: '广东政法',
+        img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '新修订的商标法表决通过 2027年1月1日起施行', date: '2026-06-26',
+        tags: ['立法', '知识产权', '商标法'],
+        summary: '十四届全国人大常委会第二十三次会议表决通过新修订的商标法，系1983年施行四十余年来首次全面修订，体例由8章73条增至9章87条，首次在法律层面界定“商标”定义。',
+        source: 'http://politics.people.com.cn/BIG5/n1/2026/0626/c1024-40748488.html', sourceName: '人民网',
+        img: 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '最高法发布6起消费者权益保护典型案例', date: '2026-03-15',
+        tags: ['典型案例', '消费者权益', '民法典'],
+        summary: '国际消费者权益日当天，最高法发布6起典型案例。其中预订酒店“30分钟后不可取消”的格式条款被认定无效，法院按经营者实际损失为基础判决退还房费1000元。',
+        source: 'https://peking.bjd.com.cn/content/s69b64161e4b0687a2892906e.html', sourceName: '北京日报',
+        img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '最高法解读：预付式消费付款7日内可无理由退款', date: '2026-03-09',
+        tags: ['消费维权', '司法解释', '民法典'],
+        summary: '最高法出台预付式消费司法解释并发布典型案例，明确付款7日内可无理由退还本金，“概不退款”等霸王条款无效，经营者“卷款跑路”构成欺诈的承担惩罚性赔偿责任。',
+        source: 'http://news.cnr.cn/native/gd/20260309/t20260309_527547238.shtml', sourceName: '央广网',
+        img: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '人社部“十五五”规划：劳动调解仲裁推进“四化”建设', date: '2026-07-31',
+        tags: ['劳动保障', '调解仲裁', '人社'],
+        summary: '《人力资源和社会保障事业发展“十五五”规划》提出推进调解仲裁规范化、标准化、专业化、智能化建设。数据显示案件调解成功率已由70.6%提升至81.1%，仲裁结案率达98.4%。',
+        source: 'https://chinajob.mohrss.gov.cn/h5/c/2026-07-31/580791.shtml', sourceName: '人力资源和社会保障部',
+        img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '上半年治理欠薪成效显著：公布重大欠薪违法906件', date: '2026-08-05',
+        tags: ['欠薪治理', '劳动权益', '人社'],
+        summary: '人社部加大欠薪治理力度，上半年公布重大欠薪违法行为906件，将697户用人单位纳入欠薪失信名单，向公安机关移送涉罪欠薪案件1375件，并对欠薪失信主体实施联合惩戒。',
+        source: 'https://city.newssc.org/system/20260805/003624885.html', sourceName: '四川新闻网',
+        img: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '全国开展清理整顿人力资源市场秩序专项行动', date: '2026-05-09',
+        tags: ['就业权益', '市场监管', '人社'],
+        summary: '2026年4月至7月，全国集中整治“招转培（贷）”欺诈，清理“央国企内推”“保录直签”等虚假招聘信息，查处“假外包、真派遣”，依法纠治各类就业歧视行为。',
+        source: 'http://career.youth.cn/Zxzx/202605/t20260509_16650516.htm', sourceName: '中国青年网',
+        img: 'https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&w=1200&q=70' },
+      { id: nid(), title: '民法典实施五年：审结人格权纠纷案件96万件', date: '2026-03-09',
+        tags: ['民法典', '人格权', '司法数据'],
+        summary: '最高法解读工作报告：2021年至2025年审结人格权纠纷案件96万件、年均增长5.1%，2025年制定民法典婚姻家庭编司法解释（二），高空抛物依民法典第1254条明确责任。',
+        source: 'https://m.gmw.cn/2026-03/09/content_1304369923.htm', sourceName: '光明网',
+        img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=70' }
     ], 'title');
 
     ensureSeedCollection(STORAGE_KEYS.forum, [
@@ -472,6 +523,8 @@
   function setAuth(user) {
     if (user) writeStorage(STORAGE_KEYS.auth, user); else localStorage.removeItem(STORAGE_KEYS.auth);
     updateAuthUI();
+    // 通知各模块（AI 悬浮助手等）账号已切换，便于按用户重新加载数据
+    try { window.dispatchEvent(new CustomEvent('kh:authchange')); } catch (e) {}
   }
   // 获取律师标签
   function getUserLawyerTag(username) {
@@ -514,9 +567,9 @@
             <a href="#/lawyer-portal" class="user-menu-item" style="display: ${user.role === 'lawyer' ? 'flex' : 'none'};">
               <span>⚖️</span> 律师端
             </a>
-            <a href="#/logout" class="user-menu-item danger">
-              <span>🚪</span> 退出登录
-            </a>
+            <button type="button" class="user-menu-item" onclick="window.KH && window.KH.openSettings && window.KH.openSettings()">
+              <span>⚙️</span> 设置
+            </button>
           </div>
         </div>
       `;
@@ -635,13 +688,18 @@
     document.body.style.setProperty('--site-bg-image', `url('${bgUrl}')`);
   }
 
-  const AI_CONSULT_KEY = 'ln_ai_consult_history';
+  // AI 咨询历史按用户隔离：不同账号各自独立 key，避免切换账号串号
+  function currentAiUserId() {
+    const u = getAuth();
+    return (u && u.id) ? String(u.id) : 'guest';
+  }
+  function aiConsultKey() { return 'ln_ai_consult_history_' + currentAiUserId(); }
 
   const AI_CONSULT_SYSTEM = [
     '你的名字是「法律小Know」，是 KnowHow 法律新媒体平台的 AI 法律咨询助手，一个服务人民的法律引导员。',
     '人设：专业、自信、有担当的法律引导员，亲切、耐心、接地气，专为普通老百姓服务，把法律讲成人人都懂的话。',
     '你的核心作用是"桥梁"：帮助不懂法律的老百姓把诉求表达得更清晰，引导他们用法律维护自身权益。',
-    '你熟知本站 KnowHow 的各板块，回答时会结合本站服务引导用户去对的地方：影视中心（普法纪录片/视频）、时政要闻（法律政策解读）、论坛交流（发帖讨论/律师在线答疑）、法律时效（法律条文变更与生效时间）、律师推广（查找律师名片/预约咨询）、法律互动（提交法律咨询与问答）。',
+    '你熟知本站 KnowHow 的各板块，回答时会结合本站服务引导用户去对的地方：影视中心（普法纪录片/视频）、法治头条（法律政策解读）、民法典（在线阅读《中华人民共和国民法典》精选法条、支持全文检索）、论坛交流（发帖讨论/律师在线答疑）、律师推广（查找律师名片/预约咨询）、法律互动（提交法律咨询与问答）。',
     '当用户的问题适合某个板块时，主动告诉他"你可以到本站 xxx 板块……"给出可落地的下一步。',
     '与豆包等通用 AI 助手不同：你不闲聊、不答与民生法律无关的话题；重点是把普通人的诉求理清，并给出可落地的下一步。',
     '当用户描述生活里的麻烦（劳动、租房、消费、婚姻家事、欠款、侵权、行政投诉、合同、房产、继承、交通事故等）时：',
@@ -655,10 +713,25 @@
   ].join('\n');
 
   function renderAiConsult() {
-    const history = readStorage(AI_CONSULT_KEY, []);
+    // AI 咨询需登录可见：未登录渲染登录提示页并拦截
+    if (!checkAuthAndRedirect()) return;
+    let history = readStorage(aiConsultKey(), []);
+    // 旧数据回填时间戳：无 ts 的项按位置递减 1 分钟，让老会话也有均匀时间
+    let backfilled = false;
+    history = history.map((m, i) => {
+      if (!m.ts) {
+        backfilled = true;
+        return Object.assign({}, m, { ts: Date.now() - (history.length - i) * 60000 });
+      }
+      return m;
+    });
+    if (backfilled) writeStorage(aiConsultKey(), history.slice(-60));
+
+    const WELCOME = '你好，我是「法律小Know」，KnowHow 法律平台的专业法律引导员。\n和豆包等通用 AI 不同，我不闲聊——专门帮不懂法律的老百姓把诉求说清楚：这是什么问题、你有哪些权利、第一步该怎么做。需要时，我也会带你到本站相关板块（论坛发帖、找律师、查法律时效…）。\n\n你可以直接用大白话描述你的情况（如：老板拖欠工资、租房不退押金、买到假货…），我会直接告诉你该怎么维权、下一步做什么。\n\n⚖️ 有疑问尽管问，专业的事交给我。';
+
     const welcome = history.length === 0
-      ? '<div class="ai-consult-msg ai-consult-bot">你好，我是「法律小Know」，KnowHow 法律平台的专业法律引导员。<br>和豆包等通用 AI 不同，我不闲聊——专门帮不懂法律的老百姓把诉求说清楚：这是什么问题、你有哪些权利、第一步该怎么做。需要时，我也会带你到本站相关板块（论坛发帖、找律师、查法律时效…）。<br><br>你可以直接用大白话描述你的情况（如：老板拖欠工资、租房不退押金、买到假货…），我会直接告诉你该怎么维权、下一步做什么。<br><br>⚖️ 有疑问尽管问，专业的事交给我。</div>'
-      : history.map(m => `<div class="ai-consult-msg ${m.role === 'user' ? 'ai-consult-user' : 'ai-consult-bot'}">${window.escapeHtml(m.content)}</div>`).join('');
+      ? window.AI.messageHTML('assistant', window.escapeHtml(WELCOME), null)
+      : history.map(m => window.AI.messageHTML(m.role, window.escapeHtml(m.content), m.ts)).join('');
 
     setApp(html`
       <div class="ai-consult-page">
@@ -667,6 +740,14 @@
           <p>用通俗语言理解法律问题 · AI 仅供指引，重大事项请咨询专业律师</p>
         </div>
         <div class="ai-consult-box">
+          <div class="ai-consult-toolbar">
+            <span class="ai-consult-toolbar-tip">已保存最近 ${history.length} 条对话</span>
+            <div class="ai-consult-toolbar-btns">
+              <button type="button" class="ai-msg-btn" id="aiConsultClear">🗑 清空对话</button>
+              <button type="button" class="ai-msg-btn" id="aiConsultExport">⬇ 导出记录</button>
+            </div>
+          </div>
+          <div class="ai-consult-chips" id="aiConsultChips"></div>
           <div class="ai-consult-messages" id="aiConsultMessages">${welcome}</div>
           <div class="ai-consult-input-row">
             <textarea id="aiConsultInput" rows="2" placeholder="描述你的法律问题，例如：公司拖欠我三个月工资，我该怎么办？"></textarea>
@@ -681,24 +762,56 @@
     const box = document.getElementById('aiConsultMessages');
     const input = document.getElementById('aiConsultInput');
     const sendBtn = document.getElementById('aiConsultSend');
+    const clearBtn = document.getElementById('aiConsultClear');
+    const exportBtn = document.getElementById('aiConsultExport');
+    const chipsWrap = document.getElementById('aiConsultChips');
     if (box) box.scrollTop = box.scrollHeight;
     if (!box || !input || !sendBtn) return;
 
-    const persist = () => writeStorage(AI_CONSULT_KEY, history.slice(-60));
+    // 常用问题快捷入口
+    if (chipsWrap) {
+      chipsWrap.innerHTML = window.AI.quickQuestions.map(q =>
+        '<button type="button" class="ai-msg-chip" data-q="' + window.escapeHtml(q) + '">' + window.escapeHtml(q) + '</button>'
+      ).join('');
+    }
+
+    // 历史消息：启用朗读/复制按钮
+    if (history.length) {
+      box.querySelectorAll('.ai-msg-row').forEach((row, i) => {
+        const m = history[i];
+        if (!m) return;
+        const s = row.querySelector('.ai-msg-speak');
+        const c = row.querySelector('.ai-msg-copy');
+        if (s) { s.disabled = false; s.addEventListener('click', () => window.AI.speak(m.content || '', s)); }
+        if (c) { c.disabled = false; c.addEventListener('click', () => window.AI.copyText(m.content || '', c)); }
+      });
+    }
+
+    const persist = () => writeStorage(aiConsultKey(), history.slice(-60));
+    let streaming = false;
 
     const send = async () => {
       const text = (input.value || '').trim();
       if (!text || sendBtn.disabled) return;
       input.value = '';
 
-      history.push({ role: 'user', content: text });
+      const now = Date.now();
+      history.push({ role: 'user', content: text, ts: now });
       persist();
-      box.insertAdjacentHTML('beforeend', `<div class="ai-consult-msg ai-consult-user">${window.escapeHtml(text)}</div>`);
+      box.insertAdjacentHTML('beforeend', window.AI.messageHTML('user', window.escapeHtml(text), now));
+      const uRow = box.lastElementChild;
+      const uSpeak = uRow && uRow.querySelector('.ai-msg-speak');
+      const uCopy = uRow && uRow.querySelector('.ai-msg-copy');
+      if (uSpeak) { uSpeak.disabled = false; uSpeak.addEventListener('click', () => window.AI.speak(text, uSpeak)); }
+      if (uCopy) { uCopy.disabled = false; uCopy.addEventListener('click', () => window.AI.copyText(text, uCopy)); }
       box.scrollTop = box.scrollHeight;
 
       const botRow = document.createElement('div');
-      botRow.className = 'ai-consult-msg ai-consult-bot';
-      botRow.innerHTML = '<span class="spinner"></span>思考中…';
+      botRow.innerHTML = window.AI.messageHTML('assistant', '');
+      const textNode = botRow.querySelector('.ai-msg-text');
+      const speakBtn = botRow.querySelector('.ai-msg-speak');
+      const copyBtn = botRow.querySelector('.ai-msg-copy');
+      textNode.innerHTML = '<span class="spinner"></span>思考中…';
       box.appendChild(botRow);
       box.scrollTop = box.scrollHeight;
 
@@ -707,28 +820,34 @@
       );
 
       sendBtn.disabled = true;
+      streaming = true;
       let full = '';
       const res = await window.AI.callDeepSeek(messages, {
         stream: true,
         thinking: true,
         onChunk: (piece, kind) => {
           if (kind === 'reasoning') {
-            botRow.innerHTML = '<span class="spinner"></span>正在分析…';
+            textNode.innerHTML = '<span class="spinner"></span>正在分析…';
           } else if (kind === 'content') {
             full += piece;
-            botRow.textContent = full;
+            textNode.textContent = full;
             box.scrollTop = box.scrollHeight;
           }
         }
       });
       sendBtn.disabled = false;
+      streaming = false;
 
       if (!res.ok) {
-        botRow.textContent = '⚠️ ' + (res.error || '请求失败');
+        const errMsg = '⚠️ ' + (res.error || '请求失败');
+        textNode.textContent = errMsg;
+        if (copyBtn) { copyBtn.disabled = false; copyBtn.addEventListener('click', () => window.AI.copyText(errMsg, copyBtn)); }
         return;
       }
-      history.push({ role: 'assistant', content: full });
+      history.push({ role: 'assistant', content: full, ts: Date.now() });
       persist();
+      if (speakBtn) { speakBtn.disabled = false; speakBtn.addEventListener('click', () => window.AI.speak(full, speakBtn)); }
+      if (copyBtn) { copyBtn.disabled = false; copyBtn.addEventListener('click', () => window.AI.copyText(full, copyBtn)); }
       box.scrollTop = box.scrollHeight;
     };
 
@@ -736,6 +855,48 @@
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
     });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (streaming || !history.length) return;
+        if (!confirm('确定清空全部对话记录吗？')) return;
+        history.length = 0;
+        writeStorage(aiConsultKey(), []);
+        box.innerHTML = window.AI.messageHTML('assistant', window.escapeHtml(WELCOME), null);
+        const tip = document.querySelector('.ai-consult-toolbar-tip');
+        if (tip) tip.textContent = '已保存最近 0 条对话';
+        box.scrollTop = 0;
+      });
+    }
+
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        if (streaming) return;
+        if (!history.length) { alert('暂无对话记录可导出'); return; }
+        const lines = history.map(m =>
+          '【' + (m.role === 'user' ? '你' : '法律小Know') + (m.ts ? ' ' + new Date(m.ts).toLocaleString() : '') + '】\n' + m.content
+        );
+        const txt = 'KnowHow AI 法律咨询记录\n导出时间：' + new Date().toLocaleString() + '\n\n' + lines.join('\n\n');
+        const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ai_consult_' + Date.now() + '.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    // 快捷问题点击即提问（事件委托在 chips 容器上）
+    if (chipsWrap) {
+      chipsWrap.addEventListener('click', (e) => {
+        const chip = e.target.closest('.ai-msg-chip');
+        if (chip) {
+          input.value = chip.getAttribute('data-q');
+          send();
+        }
+      });
+    }
   }
 
   // ── AI 表单起草助手（后台/前台内容表单共用）─────────────
@@ -2915,12 +3076,12 @@
     renderAdminFilms();
   };
 
-  // ── 时政要闻 CRUD ───────────────────────────────
+  // ── 法治头条 CRUD ───────────────────────────────
   window.addAdminNews = () => {
     setApp(html`
       <div class="admin-page">
         <div class="admin-page-header">
-          <button class="btn secondary" onclick="renderAdminNews()">← 返回时政管理</button>
+          <button class="btn secondary" onclick="renderAdminNews()">← 返回法治头条管理</button>
           <h2>新增要闻</h2>
         </div>
         <div class="admin-content">
@@ -2960,7 +3121,7 @@
     setApp(html`
       <div class="admin-page">
         <div class="admin-page-header">
-          <button class="btn secondary" onclick="renderAdminNews()">← 返回时政管理</button>
+          <button class="btn secondary" onclick="renderAdminNews()">← 返回法治头条管理</button>
           <h2>编辑要闻</h2>
         </div>
         <div class="admin-content">
@@ -3317,14 +3478,14 @@
 ### 🎬 影视中心
 - 普法课堂与民法典专题，可观看的法律视频
 
-### 📰 时政要闻
+### 📰 法治头条
 - 法律政策解读与法治建设进展
 
 ### 💬 论坛交流
 - 法律问题讨论，律师在线答疑
 
-### ⚖️ 法律时效
-- 跟踪法律变更与生效时间，及时提醒
+### 📖 民法典在线阅读
+- 在线阅读《中华人民共和国民法典》精选法条，编章目录导航 + 全文检索
 
 ### 💼 律师推广
 - 律师名片展示与法律咨询预约
@@ -3429,7 +3590,7 @@
 
         <div class="about-stats-bar">
           <div class="about-stat"><strong>${filmsCount}</strong><span>影视内容</span></div>
-          <div class="about-stat"><strong>${newsCount}</strong><span>时政要闻</span></div>
+          <div class="about-stat"><strong>${newsCount}</strong><span>法治头条</span></div>
           <div class="about-stat"><strong>${forumCount}</strong><span>论坛帖子</span></div>
           <div class="about-stat"><strong>${lawyersCount}</strong><span>律师名片</span></div>
         </div>
@@ -3473,12 +3634,12 @@
               <h3>快速入口</h3>
               <div class="about-quick-links">
                 <a href="#/films">查看影视内容</a>
-                <a href="#/news">浏览时政要闻</a>
+                <a href="#/news">浏览法治头条</a>
                 <a href="#/forum">进入法律论坛</a>
                 <a href="#/lawyers">查找律师服务</a>
               </div>
               <div class="about-tags">
-                ${(moduleTitles.length ? moduleTitles : ['影视中心', '时政要闻', '法律论坛']).map(t => `<span>${escapeHtml(t)}</span>`).join('')}
+                ${(moduleTitles.length ? moduleTitles : ['影视中心', '法治头条', '法律论坛']).map(t => `<span>${escapeHtml(t)}</span>`).join('')}
               </div>
             </div>
 
@@ -5772,9 +5933,9 @@
           <div class="grid cols-3">
             ${[
               { href: '#/films', title: '影视中心', desc: '普法课堂 · 民法典', badge: '影视', color: '#e03131' },
-              { href: '#/news', title: '时政要闻', desc: '政务动态 · 法治热词', badge: '要闻', color: '#f0c860' },
+              { href: '#/news', title: '法治头条', desc: '头条速递 · 政策热点', badge: '头条', color: '#f0c860' },
               { href: '#/forum', title: '法律论坛', desc: '专业讨论 · 经验分享', badge: '论坛', color: '#ffb84d' },
-              { href: '#/law-updates', title: '法律时效', desc: '法规变更 · 生效时间', badge: '时效', color: '#f04040' },
+              { href: '#/law-updates', title: '民法典', desc: '在线阅读 · 法条速查', badge: '法典', color: '#e8b64c' },
               { href: '#/lawyers', title: '律师服务', desc: '专业律师 · 服务展示', badge: '律师', color: '#e8b64c' },
               { href: '#/interaction', title: '法律互动', desc: '在线咨询 · 案件对接', badge: '互动', color: '#ff6b6b' },
               { href: '#/messages', title: '私信中心', desc: '与律师直接沟通交流', badge: '私信', color: '#f0d58a' },
@@ -5808,8 +5969,8 @@
           <div class="grid cols-3">
             <div class="card onboarding-card">
               <h3>第一步：浏览内容</h3>
-              <p class="small">从时政要闻和影视中心快速了解近期重点法律议题。</p>
-              <a href="#/news" class="btn secondary">进入时政要闻</a>
+              <p class="small">从法治头条和影视中心快速了解近期重点法律议题。</p>
+              <a href="#/news" class="btn secondary">进入法治头条</a>
             </div>
             <div class="card onboarding-card">
               <h3>第二步：发起咨询</h3>
@@ -5858,7 +6019,7 @@
               </div>
             </div>
             <div class="activity-card">
-              <h3>最新时政要闻</h3>
+              <h3>最新法治头条</h3>
               <div class="activity-list">
                 ${recentNews.length > 0 ? recentNews.map(item => html`
                   <div class="activity-item">
@@ -6614,6 +6775,8 @@
     let currentSort = 'date';
 
     const getNewsPhoto = (n) => {
+      // 真实要闻优先使用自带配图，否则按主题回退
+      if (n.img) return n.img;
       const text = `${n.title || ''} ${(n.tags || []).join(' ')} ${n.summary || ''}`.toLowerCase();
       const pools = text.includes('劳动') || text.includes('用工')
         ? ['workplace,employee,office,meeting', 'contract,business,documents,desk']
@@ -6657,54 +6820,87 @@
           break;
       }
 
-      return filtered.map(n => html`
-        <div class="news-card" onclick="showNewsDetail('${n.id}')">
-          <div class="news-card-media">
-            <img class="news-card-img" src="${getNewsPhoto(n)}" alt="${escapeHtml(n.title)}" loading="lazy">
-          </div>
-          <div class="news-card-header">
-            <div class="news-card-title">${escapeHtml(n.title)}</div>
-            <div class="news-card-meta">
-              <span class="news-card-date">${n.date}</span>
-              <div class="news-card-tags">
-                ${(n.tags||[]).map(tag => html`<span class="news-tag">${escapeHtml(tag)}</span>`).join('')}
-              </div>
-            </div>
-          </div>
-          <div class="news-card-content">
-            <div class="news-card-summary">${escapeHtml(n.summary)}</div>
-            <div class="news-card-mood">编者提示：${getNewsMoodLine(n)}</div>
-            <div class="news-card-actions">
-              <button class="news-action-btn primary" onclick="event.stopPropagation(); showNewsDetail('${n.id}')">
-                <span>📖</span> 查看详情
+      const NEWS_FALLBACK_IMG = 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=70';
+      const newsImg = (n) => `<img class="news-card-img tt-img" src="${getNewsPhoto(n)}" alt="${escapeHtml(n.title)}" loading="lazy" onerror="this.onerror=null;this.src='${NEWS_FALLBACK_IMG}'">`;
+      const itemActions = (n) => html`
+        <div class="news-card-actions">
+          <button class="news-action-btn primary" onclick="event.stopPropagation(); showNewsDetail('${n.id}')">
+            <span>📖</span> 详情
+          </button>
+          ${n.source ? html`
+            <a class="news-action-btn link" href="${escapeHtml(n.source)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="打开原文链接">
+              <span>🔗</span> 阅读原文
+            </a>
+          ` : ''}
+          <button class="news-action-btn secondary" onclick="event.stopPropagation(); shareNews('${n.id}')">
+            <span>📤</span> 分享
+          </button>
+          ${(() => {
+            const user = getAuth();
+            const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+            return isAdmin ? html`
+              <button class="news-action-btn danger" onclick="event.stopPropagation(); editNews('${n.id}')">
+                <span>✏️</span> 编辑
               </button>
-              <button class="news-action-btn secondary" onclick="event.stopPropagation(); shareNews('${n.id}')">
-                <span>📤</span> 分享
+              <button class="news-action-btn danger" onclick="event.stopPropagation(); deleteNews('${n.id}')">
+                <span>🗑️</span> 删除
               </button>
-              ${(() => {
-                const user = getAuth();
-                const isAdmin = user && user.role === 'admin';
-                return isAdmin ? html`
-                  <button class="news-action-btn danger" onclick="event.stopPropagation(); editNews('${n.id}')">
-                    <span>✏️</span> 编辑
-                  </button>
-                  <button class="news-action-btn danger" onclick="event.stopPropagation(); deleteNews('${n.id}')">
-                    <span>🗑️</span> 删除
-                  </button>
-                ` : '';
-              })()}
+            ` : '';
+          })()}
+        </div>
+      `;
+      const tagsHtml = (n) => `<div class="news-card-tags">${(n.tags||[]).map(tag => `<span class="news-tag">${escapeHtml(tag)}</span>`).join('')}</div>`;
+      const sourceHtml = (n) => n.sourceName ? `<span class="tt-source" title="${escapeHtml(n.source || '')}">📰 ${escapeHtml(n.sourceName)}</span>` : '';
+
+      if (!filtered.length) return '<div class="empty">未找到匹配的法治头条信息</div>';
+
+      // 头条置顶 + 列表
+      const featured = filtered[0];
+      const rest = filtered.slice(1);
+      const featuredCard = html`
+        <div class="tt-featured news-card" onclick="showNewsDetail('${featured.id}')">
+          <div class="tt-featured-media">
+            ${newsImg(featured)}
+            <span class="tt-live">🔴 头条</span>
+          </div>
+          <div class="tt-featured-body">
+            <div class="tt-title">${escapeHtml(featured.title)}</div>
+            <div class="tt-meta">
+              <span class="news-card-date">${featured.date}</span>
+              ${sourceHtml(featured)}
             </div>
+            ${tagsHtml(featured)}
+            <p class="tt-summary">${escapeHtml(featured.summary)}</p>
+            ${itemActions(featured)}
           </div>
         </div>
-      `).join('') || '<div class="empty">未找到匹配的时政信息</div>';
+      `;
+      const rowsHtml = rest.map(n => html`
+        <div class="tt-row news-card" onclick="showNewsDetail('${n.id}')">
+          <div class="tt-row-media">${newsImg(n)}</div>
+          <div class="tt-row-body">
+            <div class="tt-row-head">
+              <div class="tt-row-title">${escapeHtml(n.title)}</div>
+              ${tagsHtml(n)}
+            </div>
+            <div class="tt-row-meta">
+              <span class="news-card-date">${n.date}</span>
+              ${sourceHtml(n)}
+            </div>
+            <p class="tt-summary">${escapeHtml(n.summary)}</p>
+            ${itemActions(n)}
+          </div>
+        </div>
+      `).join('');
+      return `<div class="tt-wrap">${featuredCard}<div class="tt-list">${rowsHtml}</div></div>`;
     };
 
     setApp(html`
       <div class="news-page">
         <div class="news-header">
           <div class="header-content">
-            <h1>时政要闻</h1>
-            <p class="news-subtitle">政务动态 · 法治热词 · 政策解读</p>
+            <h1>法治头条</h1>
+            <p class="news-subtitle">头条速递 · 政策解读 · 法治热点</p>
             <div class="care-banner">关注政策变化，不是制造焦虑，而是帮助你提前准备、减少风险。</div>
         </div>
           <div class="news-stats">
@@ -6750,7 +6946,7 @@
           </div>
         </div>
         
-        <div id="newsList" class="news-grid">${renderNewsList()}</div>
+        <div id="newsList" class="news-list">${renderNewsList()}</div>
       </div>
     `);
 
@@ -6787,7 +6983,10 @@
         const date = prompt('发布日期（YYYY-MM-DD）', new Date().toISOString().slice(0,10)) || '';
       const tags = (prompt('标签（用逗号分隔）') || '').split(',').map(s => s.trim()).filter(Boolean);
         const summary = prompt('摘要内容') || '';
-        writeStorage(STORAGE_KEYS.news, [...all, { id: nid(), title, date, tags, summary }]);
+        const source = prompt('原文链接（可选，留空则无）') || '';
+        const sourceName = source && (prompt('信息来源名称（如：新华社）') || '权威媒体');
+        const img = prompt('配图链接（可选，留空则自动配图）') || '';
+        writeStorage(STORAGE_KEYS.news, [...all, { id: nid(), title, date, tags, summary, source, sourceName, img }]);
       renderNews();
     });
   }
@@ -6814,7 +7013,7 @@
     setApp(html`
         <div class="news-detail-page">
           <div class="news-detail-header">
-            <button class="btn secondary" onclick="renderNews()">← 返回时政</button>
+            <button class="btn secondary" onclick="renderNews()">← 返回法治头条</button>
             <h1>${escapeHtml(news.title)}</h1>
             ${isAdmin ? html`
               <div class="admin-actions">
@@ -6845,6 +7044,16 @@
             </div>
 
             <div class="news-detail-summary">${escapeHtml(news.summary)}</div>
+
+            ${news.source ? html`
+              <div class="news-source-box">
+                <span class="news-source-label">📎 信息来源</span>
+                <a class="news-source-link" href="${escapeHtml(news.source)}" target="_blank" rel="noopener noreferrer">
+                  ${escapeHtml(news.sourceName || news.source)} ↗
+                </a>
+                <p class="small">以上为权威媒体公开报道，点击可阅读原文。本站仅作法治资讯聚合展示。</p>
+              </div>
+            ` : ''}
 
             <div class="section" style="margin-top: 18px;">
               <h3>速读要点</h3>
@@ -6900,13 +7109,17 @@
       const date = prompt('发布日期（YYYY-MM-DD）', news.date);
       const tags = prompt('标签（用逗号分隔）', (news.tags || []).join(', '));
       const summary = prompt('摘要内容', news.summary);
-      
-      const updated = all.map(x => x.id === id ? { 
-        ...x, 
-        title, 
-        date, 
+      const source = prompt('原文链接（可留空）', news.source || '');
+      const sourceName = prompt('信息来源名称（可留空）', news.sourceName || '');
+
+      const updated = all.map(x => x.id === id ? {
+        ...x,
+        title,
+        date,
         tags: tags ? tags.split(',').map(s => s.trim()).filter(Boolean) : [],
-        summary 
+        summary,
+        source,
+        sourceName
       } : x);
       writeStorage(STORAGE_KEYS.news, updated);
       renderNews();
@@ -6931,7 +7144,7 @@
       if (!news) return;
       
       const shareUrl = `${window.location.origin}${window.location.pathname}#/news?id=${id}`;
-      const shareText = `时政要闻：${news.title} - ${news.date}`;
+      const shareText = `法治头条：${news.title} - ${news.date}`;
       
       showShareModal(news.title, shareText, shareUrl);
     };
@@ -7271,390 +7484,276 @@
 
   function renderLawUpdates() {
     if (!requireAuth()) return;
-    const all = readStorage(STORAGE_KEYS.lawUpdates, []);
-    let currentFilter = 'all';
-    let currentSort = 'date';
-    let currentStatus = 'all';
+    const CODE = window.CIVIL_CODE || [];
+    if (!CODE.length) {
+      setApp(html`<div class="cc-page"><div class="empty">民法典数据加载失败，请刷新页面重试。</div></div>`);
+      return;
+    }
 
-    const renderLawUpdatesList = (keyword = '', filter = 'all', sort = 'date', status = 'all') => {
-      let filtered = all.filter(l => {
-        const matchesKeyword = !keyword || 
-          l.name.toLowerCase().includes(keyword.toLowerCase()) || 
-          l.summary.toLowerCase().includes(keyword.toLowerCase());
-        
-        const matchesFilter = filter === 'all' || 
-          (filter === 'recent' && new Date(l.createdAt || 0) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) ||
-          (filter === 'important' && l.important);
-        
-        const today = new Date().toISOString().slice(0, 10);
-        const isEffective = l.effectiveDate <= today;
-        const matchesStatus = status === 'all' || 
-          (status === 'effective' && isEffective) ||
-          (status === 'upcoming' && !isEffective);
-        
-        return matchesKeyword && matchesFilter && matchesStatus;
-      });
+    // 统计
+    let chapCount = 0, artCount = 0;
+    CODE.forEach(v => { chapCount += v.chapters.length; v.chapters.forEach(c => artCount += c.arts.length); });
 
-      // 排序
-      switch(sort) {
-        case 'date':
-          filtered.sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
-          break;
-        case 'name':
-          filtered.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        case 'created':
-          filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-          break;
-      }
+    // 当前状态：展开的编、选中的编/章
+    let openVol = 0;
+    let selVol = 0, selChap = 0;
 
-      return filtered.map(l => {
-        const today = new Date().toISOString().slice(0, 10);
-        const isEffective = l.effectiveDate <= today;
-        const statusClass = isEffective ? 'effective' : 'upcoming';
-        const statusText = isEffective ? '已生效' : '即将生效';
-        const statusIcon = isEffective ? '✅' : '⏰';
-        
-        return html`
-          <div class="law-update-item ${statusClass}" onclick="showLawUpdateDetail('${l.id}')">
-            <div class="law-update-header">
-              <div class="law-update-title">${escapeHtml(l.name)}</div>
-              <div class="law-update-meta">
-                <span class="law-update-date">生效日期：${l.effectiveDate}</span>
-                <span class="law-update-status ${statusClass}">
-                  <span>${statusIcon}</span> ${statusText}
-                </span>
+    const volOf = (vi) => CODE[vi] || CODE[0];
+    const chapOf = (vi, ci) => (volOf(vi).chapters[ci] || volOf(vi).chapters[0]);
+
+    // ── 目录树（左栏）──
+    const treeHtml = () => CODE.map((v, vi) => {
+      const open = vi === openVol;
+      return html`
+        <div class="cc-vol ${open ? 'open' : ''}">
+          <button type="button" class="cc-vol-head" onclick="ccToggleVol(${vi})" aria-expanded="${open}">
+            <span class="cc-vol-arrow">${open ? '▾' : '▸'}</span>
+            <span class="cc-vol-name">${escapeHtml(v.vol)}</span>
+            <span class="cc-vol-count">${v.chapters.length} 章</span>
+          </button>
+          <div class="cc-vol-body" ${open ? '' : 'style="display:none"'} role="group">
+            ${v.chapters.map((c, ci) => html`
+              <button type="button" class="cc-chap ${vi === selVol && ci === selChap ? 'active' : ''}" onclick="ccSelectChap(${vi},${ci})">${escapeHtml(c.ch)}</button>
+            `).join('')}
           </div>
-            </div>
-            <div class="law-update-content">
-              <div class="law-update-summary">${escapeHtml(l.summary)}</div>
-              <div class="law-update-actions">
-                <button class="law-update-action-btn primary" onclick="event.stopPropagation(); showLawUpdateDetail('${l.id}')">
-                  <span>📖</span> 查看详情
-                </button>
-                <button class="law-update-action-btn secondary" onclick="event.stopPropagation(); shareLawUpdate('${l.id}')">
-                  <span>📤</span> 分享
-                </button>
-                ${(() => {
-                  const user = getAuth();
-                  const isAdmin = user && user.role === 'admin';
-                  return isAdmin ? html`
-                    <button class="law-update-action-btn danger" onclick="event.stopPropagation(); editLawUpdate('${l.id}')">
-                      <span>✏️</span> 编辑
-                    </button>
-                    <button class="law-update-action-btn danger" onclick="event.stopPropagation(); deleteLawUpdate('${l.id}')">
-                      <span>🗑️</span> 删除
-                    </button>
-                  ` : '';
-                })()}
+        </div>`;
+    }).join('');
+
+    // ── 条文面板（右栏）──
+    const panelHtml = (vi, ci) => {
+      const v = volOf(vi), c = chapOf(vi, ci);
+      return html`
+        <div class="cc-crumb">
+          <span class="cc-crumb-vol">${escapeHtml(v.vol)}</span>
+          <span class="cc-crumb-sep">›</span>
+          <span class="cc-crumb-chap">${escapeHtml(c.ch)}</span>
+          <span class="cc-crumb-count">${c.arts.length} 条</span>
         </div>
-            </div>
-          </div>
-        `;
-      }).join('') || '<div class="empty">未找到匹配的法律变更信息</div>';
+        <div class="cc-articles">
+          ${c.arts.map((a, i) => html`
+            <article class="cc-art">
+              <div class="cc-art-head">
+                <span class="cc-art-no">${escapeHtml(a.no)}</span>
+                <button type="button" class="cc-art-copy" onclick="ccCopyArt(${vi},${ci},${i})">复制</button>
+              </div>
+              <div class="cc-art-text">${escapeHtml(a.text)}</div>
+            </article>
+          `).join('')}
+        </div>`;
     };
 
+    // 口语/通俗别名 → 法条号（法条原文不一定包含日常说法）
+    const CC_ALIAS = {
+      '高空抛物': ['第一千二百五十四条'],
+      '高空坠物': ['第一千二百五十四条'],
+      '抛掷物品': ['第一千二百五十四条'],
+      '离婚冷静期': ['第一千零七十七条'],
+      '见义勇为': ['第一百八十四条', '第一百八十三条'],
+      '好人条款': ['第一百八十四条'],
+      '英烈': ['第一百八十五条'],
+      '高利贷': ['第六百八十条'],
+      '夫妻共同债务': ['第一千零六十四条'],
+      '婚前财产': ['第一千零六十三条'],
+      '彩礼': ['第一千零四十二条'],
+      '代位继承': ['第一千一百二十八条'],
+      '打印遗嘱': ['第一千一百三十六条'],
+      '录音录像遗嘱': ['第一千一百三十七条'],
+      '口头遗嘱': ['第一千一百三十八条'],
+      '公证遗嘱': ['第一千一百三十九条'],
+      '精神损害': ['第一千一百八十三条'],
+      '惩罚性赔偿': ['第一千一百八十五条', '第一千二百零七条', '第一千二百三十二条'],
+      '高空作业': ['第一千二百四十条'],
+      '好意同乘': ['第一千二百一十七条'],
+      '自助行为': ['第一千一百七十七条'],
+      '自甘风险': ['第一千一百七十六条'],
+      '性骚扰': ['第一千零一十条'],
+      '个人信息': ['第一千零三十四条', '第一千零三十五条', '第一千零三十六条', '第一千零三十七条', '第一千零三十八条'],
+      '隐私': ['第一千零三十二条', '第一千零三十三条'],
+      '肖像': ['第一千零一十八条', '第一千零一十九条'],
+      '名誉': ['第一千零二十四条'],
+      '人格权': ['第九百九十条', '第九百九十一条', '第九百九十二条'],
+      '格式条款': ['第四百九十六条', '第四百九十七条', '第四百九十八条'],
+      '定金': ['第五百八十六条', '第五百八十七条'],
+      '违约金': ['第五百八十五条'],
+      '借款利息': ['第六百八十条'],
+      '保证期间': ['第六百九十二条'],
+      '优先购买权': ['第七百二十六条'],
+      '承租人优先承租': ['第七百三十四条'],
+      '悬赏': ['第三百一十七条'],
+      '拾得遗失物': ['第三百一十七条'],
+      '业主共有': ['第二百八十二条'],
+      '住宅改商用': ['第二百七十九条'],
+      '耕地保护': ['第二百四十四条'],
+      '诉讼时效': ['第一百八十八条', '第一百九十条', '第一百九十二条'],
+      '不可抗力': ['第一百八十条', '第五百九十条'],
+      '正当防卫': ['第一百八十一条'],
+      '紧急救助': ['第一百八十四条'],
+      '胎儿': ['第十六条'],
+      '成年人': ['第十七条', '第十八条'],
+      '民事行为能力': ['第十八条', '第十九条', '第二十条'],
+      '离婚': ['第一千零七十六条', '第一千零七十七条', '第一千零七十九条'],
+      '抚养费': ['第一千零八十五条', '第一千零六十七条'],
+      '赡养': ['第一千零六十七条'],
+      '离婚损害赔偿': ['第一千零九十一条'],
+      '家务补偿': ['第一千零八十八条'],
+      '共同财产': ['第一千零六十二条', '第一千零六十三条'],
+      '离婚财产分割': ['第一千零八十七条'],
+      '探望权': ['第一千零八十六条'],
+      '禁止离婚': ['第一千零八十二条'],
+      '遗产': ['第一千一百二十二条'],
+      '遗嘱': ['第一千一百三十三条'],
+      '继承顺序': ['第一千一百二十七条'],
+      '放弃继承': ['第一千一百二十四条'],
+      '遗嘱见证人': ['第一千一百四十条'],
+      '必留份': ['第一千一百四十一条'],
+      '侵权过错': ['第一千一百六十五条'],
+      '无过错责任': ['第一千一百六十六条'],
+      '共同侵权': ['第一千一百六十八条'],
+      '教唆': ['第一千一百六十九条'],
+      '公平分担': ['第一千一百八十六条'],
+      '雇主责任': ['第一千一百九十二条'],
+      '用人单位责任': ['第一千一百九十一条'],
+      '安全保障义务': ['第一千一百九十八条'],
+      '校园伤害': ['第一千一百九十九条', '第一千二百条', '第一千二百零一条'],
+      '产品缺陷': ['第一千二百零二条', '第一千二百零三条'],
+      '交通事故': ['第一千二百零九条', '第一千二百一十三条'],
+      '医疗损害': ['第一千二百二十二条'],
+      '环境污染': ['第一千二百三十二条', '第一千二百三十四条'],
+      '高度危险': ['第一千二百三十六条'],
+      '饲养动物': ['第一千二百四十五条'],
+      '烈性犬': ['第一千二百四十七条'],
+      '动物园': ['第一千二百四十八条'],
+      '高空坠落物': ['第一千二百五十三条', '第一千二百五十四条'],
+      '林木折断': ['第一千二百五十七条']
+    };
+
+    // ── 全文检索结果 ──
+    const searchHtml = (q) => {
+      q = q.trim();
+      const aliasNos = CC_ALIAS[q] || [];
+      const hits = [];
+      CODE.forEach((v, vi) => v.chapters.forEach((c, ci) => c.arts.forEach((a, i) => {
+        if (a.no.indexOf(q) >= 0 || a.text.indexOf(q) >= 0 || aliasNos.indexOf(a.no) >= 0) hits.push({ vi, ci, i, a, v, c });
+      })));
+      if (!hits.length) return html`<div class="cc-no-result">未找到与「${escapeHtml(q)}」相关的法条，试试其他关键词（如"定金"、"离婚冷静期"、"高空抛物"）。</div>`;
+      return html`
+        <div class="cc-crumb">搜索结果 · <span class="cc-crumb-count">${hits.length} 条</span></div>
+        <div class="cc-search-results">
+          ${hits.slice(0, 80).map(h => html`
+            <button type="button" class="cc-sr" onclick="ccJumpChap(${h.vi},${h.ci},${h.i})">
+              <span class="cc-sr-head">
+                <span class="cc-art-no">${escapeHtml(h.a.no)}</span>
+                <span class="cc-sr-loc">${escapeHtml(h.v.vol)} › ${escapeHtml(h.c.ch)}</span>
+              </span>
+              <span class="cc-sr-text">${escapeHtml(h.a.text)}</span>
+            </button>
+          `).join('')}
+          ${hits.length > 80 ? html`<div class="cc-sr-more">…共 ${hits.length} 条匹配，仅显示前 80 条</div>` : ''}
+        </div>`;
+    };
+
+    // ── 移动端导航下拉 ──
+    const navSelectHtml = () => CODE.map((v, vi) => html`
+      <optgroup label="${escapeHtml(v.vol)}">${v.chapters.map((c, ci) => html`
+        <option value="${vi},${ci}" ${vi === selVol && ci === selChap ? 'selected' : ''}>${escapeHtml(c.ch)}</option>
+      `).join('')}</optgroup>
+    `).join('');
+
     setApp(html`
-      <div class="law-updates-page">
-        <div class="law-updates-header">
-          <div class="header-content">
-            <h1>法律时效</h1>
-            <p class="law-updates-subtitle">法律变更 · 生效时间 · 政策解读</p>
-            <div class="care-banner">及时了解时效信息，能让你在关键节点做出更稳妥的决定。</div>
+      <div class="cc-page">
+        <div class="cc-header">
+          <div class="cc-header-content">
+            <h1>民法典在线阅读</h1>
+            <p class="cc-subtitle">《中华人民共和国民法典》 · 编章目录导航 · 法条速查</p>
+            <div class="care-banner">民法典自 2021 年 1 月 1 日起施行，被称为"社会生活的百科全书"；本站收录常用与维权高频法条，支持全文检索。</div>
           </div>
-          <div class="law-updates-stats">
-            <div class="stat-item">
-              <span class="stat-number">${all.length}</span>
-              <span class="stat-label">总变更</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">${all.filter(l => l.effectiveDate <= new Date().toISOString().slice(0, 10)).length}</span>
-              <span class="stat-label">已生效</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">${all.filter(l => l.effectiveDate > new Date().toISOString().slice(0, 10)).length}</span>
-              <span class="stat-label">即将生效</span>
-            </div>
+          <div class="cc-stats">
+            <div class="stat-item"><span class="stat-number">${CODE.length}</span><span class="stat-label">编</span></div>
+            <div class="stat-item"><span class="stat-number">${chapCount}</span><span class="stat-label">章</span></div>
+            <div class="stat-item"><span class="stat-number">${artCount}</span><span class="stat-label">精选法条</span></div>
           </div>
         </div>
-        
-        <div class="law-updates-controls">
-          <div class="search-controls">
-            <div class="law-updates-search-box">
-              <input id="lawUpdatesSearch" class="law-updates-search-input" placeholder="搜索法律名称或摘要内容..." />
-              <button class="law-updates-search-btn" onclick="performLawUpdatesSearch()"><svg class="ic-mag" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></button>
-            </div>
-            <div class="law-updates-filter-controls">
-              <select id="lawUpdatesFilter" class="law-updates-filter-select">
-                <option value="all">全部变更</option>
-                <option value="recent">最近添加</option>
-                <option value="important">重要变更</option>
-              </select>
-              <select id="lawUpdatesStatus" class="law-updates-filter-select">
-                <option value="all">全部状态</option>
-                <option value="effective">已生效</option>
-                <option value="upcoming">即将生效</option>
-              </select>
-              <select id="lawUpdatesSort" class="law-updates-filter-select">
-                <option value="date">按生效日期排序</option>
-                <option value="name">按名称排序</option>
-                <option value="created">按添加时间排序</option>
-              </select>
-              <button class="law-updates-filter-btn" onclick="applyLawUpdatesFilters()">筛选</button>
-            </div>
-            ${(() => {
-              const user = getAuth();
-              const isAdmin = user && user.role === 'admin';
-              return isAdmin ? '<button id="addLawUpdate" class="add-law-update-btn">+ 添加变更</button>' : '';
-            })()}
+
+        <div class="cc-controls">
+          <div class="cc-search-box">
+            <span class="cc-search-ic">🔍</span>
+            <input id="ccSearch" class="cc-search-input" placeholder="全文检索：如"定金"、"离婚冷静期"、"高空抛物"、"诉讼时效"…" autocomplete="off" />
           </div>
+          <select id="ccNavSelect" class="cc-nav-select" aria-label="选择章节">${navSelectHtml()}</select>
         </div>
-        
-        ${(() => {
-          const user = getAuth();
-          const isAdmin = user && user.role === 'admin';
-          return isAdmin ? html`
-            <div class="law-update-new-form">
-              <h3>添加新法律变更</h3>
-              <form id="newLawUpdate" class="law-update-form" autocomplete="off">
-                <div class="form-group">
-                  <label>法律/法规名称 *</label>
-          <input name="name" required placeholder="如：公司法（修订）">
-                </div>
-                <div class="form-group">
-                  <label>生效日期 *</label>
-          <input type="date" name="date" required>
-                </div>
-                <div class="form-group">
-                  <label>重要程度</label>
-                  <select name="important">
-                    <option value="false">普通</option>
-                    <option value="true">重要</option>
-                  </select>
-                </div>
-                <div class="form-group full-width">
-                  <label>变更摘要 *</label>
-                  <textarea name="summary" required placeholder="详细说明法律变更的主要内容、影响范围等..."></textarea>
-                </div>
-                <div class="form-actions">
-                  <button class="btn secondary" type="button" onclick="this.form.reset()">重置</button>
-                  <button class="btn secondary" type="button" onclick="aiDraftLawUpdate()">✨ AI 起草</button>
-                  <button class="btn primary" type="submit">添加变更</button>
-          </div>
-        </form>
-            </div>
-          ` : '';
-        })()}
-        
-        <div id="lawUpdatesList" class="law-updates-timeline">${renderLawUpdatesList()}</div>
+
+        <div class="cc-reader">
+          <aside class="cc-tree" id="ccTree" aria-label="民法典目录"></aside>
+          <div class="cc-panel" id="ccPanel" role="region" aria-label="条文内容"></div>
+        </div>
+        <p class="cc-footnote">说明：本站收录常用与维权高频法条（共 ${artCount} 条），完整正式文本请以「国家法律法规数据库」（flk.npc.gov.cn）及官方出版物为准。</p>
       </div>
     `);
 
-    const $lawUpdatesList = document.getElementById('lawUpdatesList');
-    
-    // 搜索功能
-    document.getElementById('lawUpdatesSearch').addEventListener('input', (e) => {
-      $lawUpdatesList.innerHTML = renderLawUpdatesList(e.target.value, currentFilter, currentSort, currentStatus);
-    });
+    const drawTree = () => { document.getElementById('ccTree').innerHTML = treeHtml(); };
+    const drawPanel = () => { document.getElementById('ccPanel').innerHTML = panelHtml(selVol, selChap); };
+    drawTree();
+    drawPanel();
 
-    // 筛选功能
-    document.getElementById('lawUpdatesFilter').addEventListener('change', (e) => {
-      currentFilter = e.target.value;
-      $lawUpdatesList.innerHTML = renderLawUpdatesList(document.getElementById('lawUpdatesSearch').value, currentFilter, currentSort, currentStatus);
-    });
+    // ── 全局交互 ──
+    window.ccToggleVol = (vi) => { openVol = (openVol === vi ? -1 : vi); drawTree(); };
 
-    // 状态筛选
-    document.getElementById('lawUpdatesStatus').addEventListener('change', (e) => {
-      currentStatus = e.target.value;
-      $lawUpdatesList.innerHTML = renderLawUpdatesList(document.getElementById('lawUpdatesSearch').value, currentFilter, currentSort, currentStatus);
-    });
+    window.ccSelectChap = (vi, ci) => {
+      openVol = vi; selVol = vi; selChap = ci;
+      const s = document.getElementById('ccSearch');
+      if (s) s.value = '';
+      drawTree();
+      drawPanel();
+      const ms = document.getElementById('ccNavSelect');
+      if (ms) ms.value = vi + ',' + ci;
+    };
 
-    // 排序功能
-    document.getElementById('lawUpdatesSort').addEventListener('change', (e) => {
-      currentSort = e.target.value;
-      $lawUpdatesList.innerHTML = renderLawUpdatesList(document.getElementById('lawUpdatesSearch').value, currentFilter, currentSort, currentStatus);
-    });
+    window.ccJumpChap = (vi, ci, idx) => {
+      window.ccSelectChap(vi, ci);
+      const arts = document.querySelectorAll('.cc-art');
+      const el = arts[idx];
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
-    // 添加法律变更
-    const addLawUpdateBtn = document.getElementById('addLawUpdate');
-    if (addLawUpdateBtn) {
-      addLawUpdateBtn.addEventListener('click', () => {
-        const user = getAuth();
-        if (user && user.role !== 'admin' && user.role !== 'superadmin') {
-          alert('只有管理员可以添加法律变更');
-          return;
+    window.ccCopyArt = (vi, ci, idx) => {
+      const a = chapOf(vi, ci).arts[idx];
+      const text = a.no + '　' + a.text;
+      const ok = () => {
+        const btns = document.querySelectorAll('.cc-art-copy');
+        const b = btns[idx];
+        if (b) {
+          b.textContent = '已复制';
+          b.classList.add('copied');
+          setTimeout(() => { b.textContent = '复制'; b.classList.remove('copied'); }, 1200);
         }
-        document.getElementById('newLawUpdate').scrollIntoView({ behavior: 'smooth' });
-      });
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok, () => ccFallbackCopy(text, ok));
+      } else ccFallbackCopy(text, ok);
+    };
+
+    function ccFallbackCopy(text, ok) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); ok(); } catch (e) {}
+      document.body.removeChild(ta);
     }
 
-    // 新增法律变更表单
-    const newLawUpdateForm = document.getElementById('newLawUpdate');
-    if (newLawUpdateForm) {
-      newLawUpdateForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-        const user = getAuth();
-        if (user && user.role !== 'admin' && user.role !== 'superadmin') {
-          alert('只有管理员可以添加法律变更');
-          return;
-        }
-        
-      const fd = new FormData(e.target);
-      const name = fd.get('name');
-        if (!name) return;
-      const date = fd.get('date');
-        if (!date) return;
-      const summary = fd.get('summary');
-        if (!summary) return;
-        const important = fd.get('important') === 'true';
-        
-      const items = readStorage(STORAGE_KEYS.lawUpdates, []);
-        items.unshift({ 
-          id: nid(), 
-          name, 
-          effectiveDate: date, 
-          summary,
-          important,
-          createdAt: Date.now()
-        });
-      writeStorage(STORAGE_KEYS.lawUpdates, items);
-      e.target.reset();
-        renderLawUpdates();
-      });
-    }
+    // ── 搜索 ──
+    document.getElementById('ccSearch').addEventListener('input', (e) => {
+      const q = e.target.value;
+      if (q.trim()) document.getElementById('ccPanel').innerHTML = searchHtml(q);
+      else drawPanel();
+    });
 
-    // 全局函数：显示法律变更详情
-    window.showLawUpdateDetail = (id) => {
-      const lawUpdate = all.find(x => x.id === id);
-      if (!lawUpdate) return;
-      
-      const user = getAuth();
-      const isAdmin = user && user.role === 'admin';
-      
-      const today = new Date().toISOString().slice(0, 10);
-      const isEffective = lawUpdate.effectiveDate <= today;
-      const statusClass = isEffective ? 'effective' : 'upcoming';
-      const statusText = isEffective ? '已生效' : '即将生效';
-      const statusIcon = isEffective ? '✅' : '⏰';
-      
-      setApp(html`
-        <div class="law-update-detail-page">
-          <div class="law-update-detail-header">
-            <button class="btn secondary" onclick="renderLawUpdates()">← 返回法律时效</button>
-            <h1>${escapeHtml(lawUpdate.name)}</h1>
-            ${isAdmin ? html`
-              <div class="admin-actions">
-                <button class="btn secondary" onclick="editLawUpdate('${lawUpdate.id}')">编辑</button>
-                <button class="btn danger" onclick="deleteLawUpdate('${lawUpdate.id}')">删除</button>
-              </div>
-            ` : ''}
-          </div>
-          
-          <div class="law-update-detail-content">
-            <div class="law-update-detail-meta">
-              <div class="meta-item">
-                <span class="meta-label">生效日期</span>
-                <span class="meta-value">${lawUpdate.effectiveDate}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">当前状态</span>
-                <span class="meta-value">${statusText}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">重要程度</span>
-                <span class="meta-value">${lawUpdate.important ? '重要' : '普通'}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">添加时间</span>
-                <span class="meta-value">${new Date(lawUpdate.createdAt || 0).toLocaleString()}</span>
-              </div>
-            </div>
-            
-            <div class="law-update-detail-summary">${escapeHtml(lawUpdate.summary)}</div>
-            
-            <div class="law-update-detail-actions">
-              <button class="btn primary" onclick="shareLawUpdate('${lawUpdate.id}')">
-                <span>📤</span> 分享变更
-              </button>
-              <button class="btn secondary" onclick="renderLawUpdates()">
-                <span>📋</span> 返回列表
-              </button>
-            </div>
-          </div>
-        </div>
-      `);
-    };
-
-    // 全局函数：编辑法律变更
-    window.editLawUpdate = (id) => {
-      const user = getAuth();
-      if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
-        alert('只有管理员可以编辑法律变更');
-        return;
-      }
-      const lawUpdate = all.find(x => x.id === id);
-      if (!lawUpdate) return;
-      
-      const name = prompt('法律/法规名称', lawUpdate.name);
-      if (name === null) return;
-      const date = prompt('生效日期（YYYY-MM-DD）', lawUpdate.effectiveDate);
-      if (date === null) return;
-      const summary = prompt('变更摘要', lawUpdate.summary);
-      if (summary === null) return;
-      const important = confirm('是否为重要变更？', lawUpdate.important);
-      
-      const updated = all.map(x => x.id === id ? { 
-        ...x, 
-        name, 
-        effectiveDate: date, 
-        summary,
-        important,
-        updatedAt: Date.now()
-      } : x);
-      writeStorage(STORAGE_KEYS.lawUpdates, updated);
-      renderLawUpdates();
-    };
-
-    // 全局函数：删除法律变更
-    window.deleteLawUpdate = (id) => {
-      const user = getAuth();
-      if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
-        alert('只有管理员可以删除法律变更');
-        return;
-      }
-      if (!confirm('确定要删除这个法律变更吗？删除后无法恢复。')) return;
-      const updated = all.filter(x => x.id !== id);
-      writeStorage(STORAGE_KEYS.lawUpdates, updated);
-      renderLawUpdates();
-    };
-
-    // 全局函数：分享法律变更
-    window.shareLawUpdate = (id) => {
-      const lawUpdate = all.find(x => x.id === id);
-      if (!lawUpdate) return;
-      
-      const shareUrl = `${window.location.origin}${window.location.pathname}#/law-updates?id=${id}`;
-      const shareText = `法律变更：${lawUpdate.name} - 生效日期：${lawUpdate.effectiveDate}`;
-      
-      showShareModal(lawUpdate.name, shareText, shareUrl);
-    };
-
-    // 全局函数：执行搜索
-    window.performLawUpdatesSearch = () => {
-      const searchTerm = document.getElementById('lawUpdatesSearch').value.trim();
-      $lawUpdatesList.innerHTML = renderLawUpdatesList(searchTerm, currentFilter, currentSort, currentStatus);
-    };
-
-    // 全局函数：应用筛选
-    window.applyLawUpdatesFilters = () => {
-      const filter = document.getElementById('lawUpdatesFilter').value;
-      const sort = document.getElementById('lawUpdatesSort').value;
-      const status = document.getElementById('lawUpdatesStatus').value;
-      currentFilter = filter;
-      currentSort = sort;
-      currentStatus = status;
-      $lawUpdatesList.innerHTML = renderLawUpdatesList(document.getElementById('lawUpdatesSearch').value, currentFilter, currentSort, currentStatus);
-    };
+    // ── 移动端下拉导航 ──
+    document.getElementById('ccNavSelect').addEventListener('change', (e) => {
+      const parts = e.target.value.split(',');
+      window.ccSelectChap(Number(parts[0]), Number(parts[1]));
+    });
   }
 
   function renderLawyers() {
@@ -8261,7 +8360,7 @@
             <div class="stat-icon">📰</div>
             <div class="stat-info">
               <div class="stat-number">${news.length}</div>
-              <div class="stat-label">时政要闻</div>
+              <div class="stat-label">法治头条</div>
             </div>
           </div>
           <div class="stat-card">
@@ -8334,7 +8433,7 @@
             <div class="admin-module-card" onclick="renderAdminNews()">
               <div class="module-icon">📰</div>
               <div class="module-content">
-                <h3>时政管理</h3>
+                <h3>法治头条管理</h3>
                 <p>管理政务要闻和法治热词</p>
                 <div class="module-count">${news.length} 条要闻</div>
               </div>
@@ -8463,7 +8562,7 @@
       <div class="admin-page">
         <div class="admin-page-header">
           <button class="btn secondary" onclick="renderAdmin()">← 返回管理</button>
-          <h2>时政管理</h2>
+          <h2>法治头条管理</h2>
           <button class="btn primary" onclick="addAdminNews()">+ 新增要闻</button>
         </div>
         <div class="admin-content">
@@ -8480,7 +8579,7 @@
                   <button class="btn danger small" onclick="deleteAdminNews('${item.id}')">删除</button>
                 </div>
               </div>
-            `).join('') || '<div class="empty">暂无时政要闻</div>'}
+            `).join('') || '<div class="empty">暂无法治头条</div>'}
           </div>
         </div>
       </div>
@@ -9768,6 +9867,14 @@
         alert('数据管理器未初始化');
       }
     }
+  };
+
+  // 退出登录（设置面板调用；同时关闭设置面板回到首页）
+  window.KH = window.KH || {};
+  window.KH.logout = function () {
+    if (window.KH.closeSettings) window.KH.closeSettings();
+    setAuth(null);
+    location.hash = '#/';
   };
 
 })(); 
