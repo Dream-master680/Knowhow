@@ -1,0 +1,708 @@
+/* ═══════════════════════════════════════════════════════════════════
+   v5「红色法治 · 党的光辉」统一层（2026-08-21）
+   ─────────────────────────────────────────────────────────────
+   目标：统一此前 4 代叠压样式，走"党的红 + 金光"主题，
+         修复 --card-bg 未定义致卡片透明的 bug，
+         让 AI 悬浮窗/咨询页由浅色玻璃融入全站深红主题。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1. 单一令牌集：覆盖全部旧色板 */
+:root {
+  --bg: #1a0d0d;
+  --panel: #241212;
+  --card: #2a1414;
+  --card-bg: #2a1414;          /* 修复此前从未定义、导致卡片透明的 bug */
+  --card-2: #311717;
+  --text: #f5efe3;
+  --text-strong: #fff7ea;
+  --muted: #bfa3a3;
+  --border: #4a2a2a;
+  --border-soft: #3a1f1f;
+
+  --primary: #e03131;
+  --primary-600: #f04040;
+  --primary-hover: #ff4d4d;
+  --primary-700: #b02424;
+  --primary-soft: rgba(224, 49, 49, 0.14);
+  --primary-glow: rgba(224, 49, 49, 0.35);
+
+  --gold: #f0c860;
+  --gold-2: #e8b64c;
+  --gold-soft: rgba(240, 200, 96, 0.15);
+  --gold-glow: rgba(240, 200, 96, 0.3);
+
+  --amber: #ffb84d;
+  --danger: #ff6b6b;
+  --success: #4ade80;
+  --warning: #fbbf24;
+
+  --radius: 14px;
+  --radius-lg: 18px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --font-title: linear-gradient(135deg, #fff7ea 0%, #f0c860 100%);
+  --glass-bg: rgba(42, 20, 20, 0.72);
+
+  --fx-accent-a: #f04040;
+  --fx-accent-b: #f0c860;
+  --fx-accent-c: #ffb84d;
+  --tech-cyan: #f0c860;
+  --tech-violet: #e03131;
+  --tech-glow: rgba(240, 200, 96, 0.25);
+}
+
+/* 2. 全局表面：红色法治底 */
+body {
+  background-color: #1a0d0d;
+  background-image:
+    linear-gradient(160deg, rgba(26, 13, 13, 0.9), rgba(38, 18, 18, 0.84)),
+    radial-gradient(1000px 640px at 50% -12%, rgba(224, 49, 49, 0.16), transparent 60%),
+    radial-gradient(800px 520px at 108% 108%, rgba(240, 200, 96, 0.10), transparent 60%),
+    var(--site-bg-image, url('https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1800&q=80'));
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--text);
+}
+
+/* 3. 环境特效改红金 */
+.modal-content::before,
+.share-modal-content::before {
+  background:
+    radial-gradient(360px 160px at -6% -10%, rgba(224, 49, 49, 0.14), transparent 60%),
+    radial-gradient(260px 140px at 106% 0%, rgba(240, 200, 96, 0.13), transparent 62%);
+}
+.cursor-aura {
+  background: radial-gradient(circle, rgba(240, 200, 96, 0.10) 0%, rgba(224, 49, 49, 0.06) 42%, rgba(0, 0, 0, 0) 72%);
+}
+.tech-ambient::before {
+  background-image:
+    linear-gradient(to right, rgba(240, 200, 96, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(224, 49, 49, 0.028) 1px, transparent 1px);
+}
+.tech-beam {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(240, 200, 96, 0.28), rgba(224, 49, 49, 0.22), rgba(0, 0, 0, 0));
+  box-shadow: 0 0 12px rgba(240, 200, 96, 0.2);
+}
+.ion-particle {
+  background: radial-gradient(circle, rgba(255, 240, 220, 0.75), rgba(240, 200, 96, 0.34) 45%, rgba(224, 49, 49, 0.1));
+  box-shadow: 0 0 6px rgba(240, 200, 96, 0.2), 0 0 10px rgba(224, 49, 49, 0.12);
+}
+
+/* 4. 顶栏 + 品牌 + 导航 */
+.site-header {
+  background: rgba(30, 15, 15, 0.82);
+  border-bottom: 1px solid rgba(240, 200, 96, 0.22);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: none;
+}
+.brand {
+  background: linear-gradient(135deg, #f0c860, #fff7ea 55%, #f0c860);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.brand-easter summary { color: var(--muted); font-size: 12px; }
+.brand-easter summary:hover { color: var(--gold); }
+.nav-link {
+  color: #e8ddd0;
+  border-radius: 8px;
+}
+.nav-link:hover {
+  background: rgba(224, 49, 49, 0.16);
+  color: #fff;
+}
+.nav-link.active,
+.nav-link[aria-current="page"] {
+  color: #fff;
+  background: rgba(224, 49, 49, 0.18);
+}
+.nav-link::after {
+  background: linear-gradient(90deg, #f04040, #f0c860);
+  box-shadow: 0 0 8px rgba(240, 200, 96, 0.5);
+}
+
+/* 5. 页脚：金色顶边 + 红色法治立意 */
+.site-footer {
+  border-top: 1px solid rgba(240, 200, 96, 0.25);
+  background: rgba(26, 13, 13, 0.88);
+  box-shadow: inset 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 26px 0;
+}
+.site-footer .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.site-footer p { color: var(--muted); margin: 0; }
+.site-footer .corner-note summary { color: var(--gold); }
+
+/* 6. 首页 Hero：红金光辉 */
+.hero-section {
+  background:
+    linear-gradient(180deg, rgba(26, 13, 13, 0.55), rgba(26, 13, 13, 0.82)),
+    radial-gradient(700px 420px at 50% 0%, rgba(240, 200, 96, 0.16), transparent 70%),
+    var(--hero-bg-image, url('https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1800&q=80'));
+  background-size: cover;
+  background-position: center;
+}
+.hero-section::before {
+  background: radial-gradient(600px 360px at 50% -10%, rgba(240, 200, 96, 0.10), transparent 70%);
+}
+.hero-title {
+  background: linear-gradient(135deg, #fff7ea 0%, #f0c860 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-subtitle,
+.hero-careline { color: #e8ddd0; }
+.hero-quote {
+  color: var(--gold-2);
+  border-left: 3px solid rgba(240, 200, 96, 0.5);
+  padding-left: 12px;
+}
+.hero-stats .stat-number { color: var(--gold); }
+.hero-stats .stat-label { color: var(--muted); }
+.stat-item {
+  background: rgba(58, 28, 28, 0.5);
+  border: 1px solid var(--border-soft);
+}
+
+/* 7. 标题 */
+.section-title {
+  color: var(--text-strong);
+  border-left: 3px solid var(--gold);
+  padding-left: 10px;
+}
+
+/* 8. 按钮统一：红主 / 金强调 / 线框 / 危险 */
+.btn {
+  background: rgba(49, 24, 24, 0.9);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  transition: all 0.18s ease;
+}
+.btn:hover {
+  background: rgba(58, 30, 30, 0.95);
+  border-color: rgba(240, 200, 96, 0.45);
+  color: var(--text-strong);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+.btn.primary {
+  background: linear-gradient(180deg, #f04040, #c82828);
+  border-color: #e03131;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(224, 49, 49, 0.28);
+}
+.btn.primary:hover {
+  background: linear-gradient(180deg, #ff4d4d, #e03131);
+  border-color: #ff6b6b;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(224, 49, 49, 0.4);
+}
+.btn.gold {
+  background: linear-gradient(180deg, #f7d378, #e8b64c);
+  border-color: #f0c860;
+  color: #2a1414;
+}
+.btn.gold:hover {
+  background: linear-gradient(180deg, #ffe09a, #f0c860);
+  border-color: #ffe09a;
+  color: #2a1414;
+}
+.btn.secondary {
+  background: rgba(58, 28, 28, 0.55);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn.danger {
+  background: linear-gradient(180deg, #ff6b6b, #e04444);
+  border-color: #ff6b6b;
+  color: #fff;
+}
+.btn.success {
+  background: linear-gradient(180deg, #34d16b, #17a44c);
+  border-color: #4ade80;
+  color: #fff;
+}
+.btn.small { padding: 6px 10px; font-size: 13px; }
+.btn.large { padding: 14px 22px; font-size: 16px; }
+.btn.disabled,
+.btn:disabled {
+  background: #3a2222;
+  border-color: #4a2a2a;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.btn-group .btn + .btn { margin-left: 8px; }
+
+/* 9. 卡片统一：红玻璃 + 红光晕 + 顶边金光 */
+.section,
+.card,
+.list-item,
+.news-card,
+.forum-post,
+.lawyer-card,
+.film-card,
+.admin-module-card,
+.admin-item,
+.lawyer-contact-card,
+.news-detail-content,
+.lawyer-detail-content,
+.activity-card,
+.consultation-card {
+  background: linear-gradient(180deg, rgba(43, 21, 21, 0.92), rgba(36, 18, 18, 0.9));
+  border: 1px solid rgba(240, 200, 96, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.section::before,
+.card::before,
+.list-item::before,
+.news-card::before,
+.forum-post::before,
+.lawyer-card::before,
+.film-card::before,
+.admin-module-card::before,
+.admin-item::before {
+  background: linear-gradient(130deg, rgba(240, 200, 96, 0.07), rgba(224, 49, 49, 0.05) 45%, rgba(0, 0, 0, 0));
+}
+.card:hover,
+.section:hover,
+.list-item:hover,
+.news-card:hover,
+.forum-post:hover,
+.lawyer-card:hover,
+.film-card:hover,
+.admin-module-card:hover,
+.admin-item:hover,
+.lawyer-contact-card:hover,
+.activity-card:hover,
+.consultation-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(240, 200, 96, 0.4);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32), 0 0 22px rgba(224, 49, 49, 0.16);
+}
+.card-title,
+.news-card-title,
+.forum-post-title,
+.lawyer-card-title,
+.film-title,
+.list-item .title { color: var(--text-strong); }
+.card-meta,
+.news-card-meta,
+.forum-post-meta,
+.film-meta,
+.lawyer-card-firm,
+.list-item .meta { color: var(--muted); }
+
+/* 10. 页眉统一：红玻璃 + 白→金渐变标题（消除各页红绿青柠檬混色） */
+.news-header,
+.forum-header,
+.lawyers-header,
+.law-updates-header,
+.film-header,
+.admin-header,
+.comments-header,
+.interaction-header,
+.lawyer-detail-header {
+  background: linear-gradient(160deg, rgba(49, 25, 25, 0.92), rgba(36, 18, 18, 0.88));
+  border: 1px solid rgba(240, 200, 96, 0.18);
+  border-radius: 20px;
+}
+.news-header h1,
+.forum-header h1,
+.lawyers-header h1,
+.law-updates-header h1,
+.film-header h1,
+.admin-header h1,
+.comments-header h1,
+.interaction-header h1,
+.admin-page-header h1,
+.lawyer-detail-header h1,
+.header-content h1 {
+  background: var(--font-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.news-header .stat-number,
+.forum-header .stat-number,
+.lawyers-header .stat-number,
+.law-updates-header .stat-number,
+.film-header .stat-number,
+.admin-header .stat-number,
+.interaction-header .stat-number { color: var(--gold); }
+
+/* 11. 输入框 / 表单统一 */
+input[type="text"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  background: #1c0d0d;
+  border-color: var(--border);
+  color: var(--text);
+}
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(240, 200, 96, 0.55);
+  box-shadow: 0 0 0 3px rgba(240, 200, 96, 0.14), 0 0 22px rgba(224, 49, 49, 0.14);
+}
+input::placeholder,
+textarea::placeholder { color: #7a5f5f; }
+label { color: #d9c6b8; }
+
+/* 12. 登录框最终统一版（覆盖旧 !important 墙） */
+.auth-modal-content {
+  background: linear-gradient(180deg, #2a1414, #201010) !important;
+  border: 1px solid rgba(240, 200, 96, 0.2) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55) !important;
+  color: var(--text) !important;
+}
+.auth-modal-header h2,
+.auth-title,
+#authTitle {
+  background: var(--font-title) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+.auth-modal-header p,
+#authSubtitle { color: var(--muted) !important; }
+.auth-tabs { border-color: var(--border) !important; }
+.auth-tab {
+  color: var(--muted) !important;
+  border-color: transparent !important;
+}
+.auth-tab.active {
+  background: linear-gradient(180deg, #f04040, #c82828) !important;
+  color: #fff !important;
+  border-color: #e03131 !important;
+}
+.auth-form-group label { color: #d9c6b8 !important; }
+.auth-form-group input {
+  background: #1c0d0d !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+.auth-form-group input:focus {
+  border-color: rgba(240, 200, 96, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(240, 200, 96, 0.14) !important;
+}
+.auth-submit {
+  background: linear-gradient(135deg, #f04040, #c82828) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(224, 49, 49, 0.35) !important;
+}
+.auth-submit:hover {
+  background: linear-gradient(135deg, #ff4d4d, #e03131) !important;
+  box-shadow: 0 8px 24px rgba(224, 49, 49, 0.45) !important;
+}
+.auth-demo { border-color: var(--border) !important; }
+.auth-demo .kbd {
+  background: #311717 !important;
+  border-color: #4a2a2a !important;
+  color: #f0c860 !important;
+}
+.auth-close { color: var(--muted) !important; }
+.auth-close:hover { color: #fff !important; }
+
+/* 13. 标签页统一 */
+.tab {
+  border-color: var(--border);
+  color: var(--muted);
+  background: rgba(42, 20, 20, 0.5);
+}
+.tab.active {
+  background: rgba(224, 49, 49, 0.18);
+  border-color: #e03131;
+  color: #fff;
+}
+.tab-btn {
+  border-color: var(--border);
+  color: var(--muted);
+  background: rgba(42, 20, 20, 0.5);
+}
+.tab-btn.active {
+  background: linear-gradient(180deg, #f04040, #c82828);
+  border-color: #e03131;
+  color: #fff;
+}
+.tab-btn.active .tab-icon { color: #fff; }
+.tab-badge {
+  background: linear-gradient(135deg, #f04040, #c82828);
+  color: #fff;
+}
+
+/* 14. 徽章 / 标签统一（替换 Bootstrap 绿红等泄入色） */
+.badge,
+.news-tag,
+.lawyer-area-tag {
+  border-color: rgba(240, 200, 96, 0.3);
+  background: linear-gradient(180deg, rgba(240, 200, 96, 0.12), rgba(224, 49, 49, 0.08));
+  color: #ffe2a8;
+}
+.role-badge {
+  background: rgba(42, 20, 20, 0.9);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.role-badge.superadmin,
+.role-badge.admin {
+  background: linear-gradient(180deg, rgba(240, 200, 96, 0.18), rgba(224, 49, 49, 0.12));
+  border-color: rgba(240, 200, 96, 0.4);
+  color: #f0c860;
+}
+.role-badge.lawyer {
+  background: rgba(240, 200, 96, 0.1);
+  border-color: rgba(240, 200, 96, 0.3);
+  color: #f0c860;
+}
+.role-badge.user { color: var(--muted); }
+.status-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.status-badge.replied,
+.status-badge.closed { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
+.urgency-badge.high { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+.urgency-badge.medium { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+
+/* 15. 聊天气泡统一：红系 */
+.message.sent,
+.message-item.own {
+  background: linear-gradient(135deg, #e03131, #b02424);
+  color: #fff;
+}
+.message.received,
+.message-item.other {
+  background: #2a1414;
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+}
+.message.sent .message-time,
+.message-item.own .message-time { color: rgba(255, 255, 255, 0.75); }
+
+/* 16. AI 悬浮助手：深红玻璃（原浅色玻璃改红） */
+.ai-chat-fab {
+  background: linear-gradient(135deg, #e03131, #c82828);
+  box-shadow: 0 8px 24px rgba(224, 49, 49, 0.4);
+  font-size: 15px;
+}
+.ai-chat-fab:hover {
+  background: linear-gradient(135deg, #ff4d4d, #e03131);
+  box-shadow: 0 12px 28px rgba(224, 49, 49, 0.5);
+}
+.ai-chat-panel {
+  background: rgba(38, 19, 19, 0.96);
+  border: 1px solid rgba(240, 200, 96, 0.22);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+.ai-chat-header {
+  background: linear-gradient(135deg, #e03131, #a81e1e);
+}
+.ai-chat-title { color: #fff7ea; }
+.ai-chat-close { color: rgba(255, 247, 234, 0.9); }
+.ai-chat-close:hover { background: rgba(255, 255, 255, 0.12); }
+.ai-chat-messages { background: rgba(30, 15, 15, 0.6); }
+.ai-msg-assistant {
+  background: #2a1414;
+  border: 1px solid #4a2a2a;
+  color: #f5efe3;
+}
+.ai-msg-user {
+  background: linear-gradient(135deg, #e03131, #b02424);
+  color: #fff;
+}
+.ai-chat-input-row {
+  background: #241212;
+  border-top: 1px solid #4a2a2a;
+}
+.ai-chat-input {
+  background: #1c0d0d;
+  border: 1px solid #4a2a2a;
+  color: #f5efe3;
+}
+.ai-chat-input::placeholder { color: #7a5f5f; }
+.ai-chat-input:focus { border-color: #f0c860; }
+.ai-chat-send {
+  background: linear-gradient(135deg, #e03131, #b02424);
+  color: #fff;
+}
+
+/* 17. AI 法律咨询页：深红玻璃 */
+.ai-consult-header h1 {
+  background: var(--font-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ai-consult-header p { color: var(--muted); }
+.ai-consult-box {
+  background: rgba(38, 19, 19, 0.96);
+  border: 1px solid rgba(240, 200, 96, 0.22);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+.ai-consult-messages { background: rgba(30, 15, 15, 0.6); }
+.ai-consult-bot {
+  background: #2a1414;
+  border: 1px solid #4a2a2a;
+  color: #f5efe3;
+}
+.ai-consult-user {
+  background: linear-gradient(135deg, #e03131, #b02424);
+  color: #fff;
+}
+.ai-consult-input-row {
+  background: #241212;
+  border-top: 1px solid #4a2a2a;
+}
+.ai-consult-input-row textarea {
+  background: #1c0d0d;
+  border: 1px solid #4a2a2a;
+  color: #f5efe3;
+}
+.ai-consult-input-row textarea::placeholder { color: #7a5f5f; }
+.ai-consult-input-row textarea:focus { border-color: #f0c860; }
+.ai-consult-disclaimer {
+  color: var(--gold-2);
+  background: rgba(36, 18, 18, 0.9);
+  border-top: 1px solid #4a2a2a;
+}
+
+/* 18. 空状态统一 */
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 28px;
+  border: 1px dashed #5a3434;
+  border-radius: 12px;
+  background: rgba(42, 20, 20, 0.4);
+}
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  padding: 32px 20px;
+}
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 10px; opacity: 0.85; }
+
+/* 19. 加载动画 */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(240, 200, 96, 0.3);
+  border-top-color: #f0c860;
+  border-radius: 50%;
+  animation: khSpin 0.7s linear infinite;
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+@keyframes khSpin { to { transform: rotate(360deg); } }
+
+/* 20. 登录提示卡片（未登录落地页） */
+.login-prompt-card {
+  background: linear-gradient(180deg, rgba(43, 21, 21, 0.92), rgba(36, 18, 18, 0.9));
+  border: 1px solid rgba(240, 200, 96, 0.2);
+  border-radius: 20px;
+}
+.login-prompt-header h1 {
+  background: var(--font-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.login-prompt-slogan { color: var(--gold-2); }
+.login-prompt-minimal { color: var(--muted); }
+
+/* 21. 侧栏 / 面板（消息、资料、后台） */
+.messages-sidebar-new,
+.profile-card,
+.sidebar-content {
+  background: linear-gradient(180deg, rgba(43, 21, 21, 0.9), rgba(36, 18, 18, 0.86));
+  border: 1px solid rgba(240, 200, 96, 0.14);
+}
+.profile-header h1,
+.admin-header h1 { background: var(--font-title); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* 22. 滚动条 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #4a2a2a; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #5a3434; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 23. 响应式补充 */
+@media (max-width: 768px) {
+  .site-header { padding: 10px 0; }
+  .brand { font-size: 19px; }
+  .ai-chat-panel { width: calc(100vw - 32px); }
+}
+@media (max-width: 480px) {
+  .ai-chat-panel { right: 12px; bottom: 84px; width: calc(100vw - 24px); }
+  .ai-chat-fab { right: 16px; bottom: 16px; }
+}
+
+/* 主题风格切换按钮（红色主题） */
+.theme-toggle {
+  background: rgba(42, 20, 20, 0.72);
+  color: #f5efe3;
+  border-color: #4a2a2a;
+}
+.theme-toggle:hover {
+  border-color: #e03131;
+  background: rgba(60, 28, 28, 0.8);
+  box-shadow: 0 0 8px rgba(224, 49, 49, 0.25);
+}
+.theme-toggle .tt-label { color: #f0c860; }
+
+/* 简介页适配红色主题 */
+.about-hero,
+.about-content,
+.about-section-card,
+.about-module-card,
+.about-side-card,
+.about-stat {
+  border-color: rgba(240, 200, 96, 0.18);
+}
+.about-hero h1 { color: #fff7ea; }
+.about-hero p,
+.about-section-card h2,
+.about-section-card p,
+.about-module-card .about-list li,
+.about-module-card h3,
+.about-side-card h3,
+.about-side-card p,
+.about-stat span,
+.about-quick-links a {
+  color: #e8dcc8;
+}
+.about-stat strong { color: var(--gold); }
+.about-module-icon {
+  background: rgba(240, 200, 96, 0.14);
+  border-color: rgba(240, 200, 96, 0.24);
+}
+.about-list li::marker { color: rgba(240, 200, 96, 0.85); }
+
+/* ── 律师推广页 v2：红色法治主题 ───────────── */
+.lawyer-avatar-letter {
+  background: linear-gradient(135deg, #f0c860, #e03131);
+  box-shadow: 0 4px 14px rgba(224, 49, 49, 0.3);
+}
+.lawyer-verified-badge {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+}

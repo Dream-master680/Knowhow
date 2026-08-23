@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+      <title>KnowHow</title>
+      <meta name="description" content="KnowHow：法律新媒体平台，提供影视、时政、论坛、法律时效、律师推广等服务">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="red-theme.css" id="redThemeCss">
+  <script>
+    /* 主题风格切换：红色法治(默认) / 原版 */
+    (function () {
+      function applyTheme(t) {
+        var theme = (t === 'original') ? 'original' : 'red';
+        var link = document.getElementById('redThemeCss');
+        if (link) link.disabled = (theme !== 'red');
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem('kh_theme', theme); } catch (e) {}
+        var lab = document.getElementById('themeToggleLabel');
+        if (lab) lab.textContent = (theme === 'original') ? '原版' : '红色';
+      }
+      var saved = null;
+      try { saved = localStorage.getItem('kh_theme'); } catch (e) {}
+      var initial = (saved === 'original') ? 'original' : 'red';
+      window.KH = window.KH || {};
+      window.KH.applyTheme = applyTheme;
+      applyTheme(initial);
+      document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('themeToggle');
+        if (btn) btn.addEventListener('click', function () {
+          var cur = (document.documentElement.getAttribute('data-theme') === 'original') ? 'original' : 'red';
+          applyTheme(cur === 'red' ? 'original' : 'red');
+        });
+      });
+    })();
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+          <div class="brand-stack" role="banner" aria-label="网站名称">
+            <div class="brand">KnowHow</div>
+            <details class="brand-easter" aria-label="法力无Byte彩蛋">
+              <summary>法力无Byte</summary>
+              <div class="brand-easter-text" onclick="this.closest('details').open = false">你认真走的每一步，都会把未来照亮一点。—— 法力无Byte</div>
+            </details>
+          </div>
+      <nav class="nav" aria-label="主导航">
+        <a href="#/" class="nav-link">首页</a>
+        <a href="#/about" class="nav-link">简介</a>
+        <a href="#/films" class="nav-link">影视</a>
+        <a href="#/news" class="nav-link">时政</a>
+        <a href="#/forum" class="nav-link">论坛</a>
+            <a href="#/law-updates" class="nav-link">法律时效</a>
+        <a href="#/lawyers" class="nav-link">律师推广</a>
+        <a href="#/interaction" class="nav-link">法律互动</a>
+        <a href="#/ai-consult" class="nav-link">AI咨询</a>
+        <button id="themeToggle" class="theme-toggle" type="button" title="点击切换主题风格" aria-label="切换主题风格">
+          <span class="tt-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+          <span class="tt-label" id="themeToggleLabel">红色</span>
+        </button>
+        <a href="#/messages" class="nav-link" id="messagesLink" style="display: none;">交流中心</a>
+        <a href="#/lawyer-portal" class="nav-link" id="lawyerPortalLink" style="display: none;">律师端</a>
+        <a href="#/admin" class="nav-link" id="adminLink" style="display: none;">后台管理</a>
+        <a href="#/login" class="nav-link" id="authLink">登录</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="container" role="main" aria-live="polite"></main>
+
+  <!-- 登录注册模态框 -->
+  <div id="authModal" class="auth-modal">
+    <div class="auth-modal-content">
+      <button class="auth-close" onclick="closeAuthModal()">×</button>
+      <div class="auth-modal-header">
+        <h2 id="authTitle">登录</h2>
+        <p id="authSubtitle">欢迎回到法律新媒体</p>
+      </div>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">注册</button>
+      </div>
+      
+      <form id="authForm" class="auth-form" autocomplete="off">
+        <div class="auth-form-group">
+          <label for="authUsername">用户名</label>
+          <input type="text" id="authUsername" name="username" required placeholder="请输入用户名">
+          <div class="auth-error" id="usernameError"></div>
+        </div>
+        
+        <div class="auth-form-group">
+          <label for="authPassword">密码</label>
+          <input type="password" id="authPassword" name="password" required placeholder="请输入密码">
+          <div class="auth-error" id="passwordError"></div>
+        </div>
+        
+        <div class="auth-form-group" id="confirmPasswordGroup" style="display: none;">
+          <label for="authConfirmPassword">确认密码</label>
+          <input type="password" id="authConfirmPassword" name="confirmPassword" placeholder="请再次输入密码">
+          <div class="auth-error" id="confirmPasswordError"></div>
+        </div>
+        
+            <div class="auth-form-group" id="emailGroup" style="display: none;">
+              <label for="authEmail">邮箱（可选）</label>
+              <input type="email" id="authEmail" name="email" placeholder="请输入邮箱地址">
+              <div class="auth-error" id="emailError"></div>
+            </div>
+            
+            <div class="auth-form-group" id="roleGroup" style="display: none;">
+              <label for="authRole">注册类型</label>
+              <select id="authRole" name="role">
+                <option value="user">普通用户</option>
+                <option value="lawyer">律师（需管理员审核）</option>
+              </select>
+              <div class="auth-error" id="roleError"></div>
+            </div>
+        
+        <button type="submit" class="auth-submit" id="authSubmit">登录</button>
+        <div class="auth-error" id="authError"></div>
+      </form>
+      
+      <details class="auth-demo auth-demo-bottom">
+        <summary>测试账号（仅体验）</summary>
+        <div class="small">超级管理员：<span class="kbd">admin</span> / <span class="kbd">admin123</span></div>
+        <div class="small">律师：<span class="kbd">lawyer</span> / <span class="kbd">123456</span></div>
+        <div class="small">用户：<span class="kbd">user</span> / <span class="kbd">123456</span></div>
+      </details>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+        <p>© 2026 KnowHow · 红色法治 · 服务人民</p>
+        <p class="small">让法律更可亲，让求助更有回应</p>
+        <details class="corner-note" aria-label="Jasper手记">
+          <summary>Jasper</summary>
+          <div class="corner-note-content" onclick="this.closest('details').open = false">你走过的每一步，都会在未来回头时发光。—— Jasper</div>
+        </details>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="ai.js"></script>
+  <script src="app.js"></script>
+</body>
+</html> 
