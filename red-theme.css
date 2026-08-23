@@ -365,7 +365,7 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(240, 200, 96, 0.14), 0 0 22px rgba(224, 49, 49, 0.14);
 }
 input::placeholder,
-textarea::placeholder { color: #7a5f5f; }
+textarea::placeholder { color: #b08c8c; }
 label { color: #d9c6b8; }
 
 /* 12. 登录框最终统一版（覆盖旧 !important 墙） */
@@ -538,7 +538,7 @@ label { color: #d9c6b8; }
   border: 1px solid #4a2a2a;
   color: #f5efe3;
 }
-.ai-chat-input::placeholder { color: #7a5f5f; }
+.ai-chat-input::placeholder { color: #b08c8c; }
 .ai-chat-input:focus { border-color: #f0c860; }
 .ai-chat-send {
   background: linear-gradient(135deg, #e03131, #b02424);
@@ -577,7 +577,7 @@ label { color: #d9c6b8; }
   border: 1px solid #4a2a2a;
   color: #f5efe3;
 }
-.ai-consult-input-row textarea::placeholder { color: #7a5f5f; }
+.ai-consult-input-row textarea::placeholder { color: #b08c8c; }
 .ai-consult-input-row textarea:focus { border-color: #f0c860; }
 .ai-consult-disclaimer {
   color: var(--gold-2);
@@ -705,4 +705,25 @@ label { color: #d9c6b8; }
 }
 .lawyer-verified-badge {
   background: linear-gradient(135deg, #22c55e, #15803d);
+}
+
+/* ═══ 前端打磨 v1：补齐红版缺失变量（贴合红金配色） ═══ */
+:root {
+  --text-secondary: #cbb0b0;
+  --accent: #f0c860;
+  --hover-bg: rgba(224, 49, 49, 0.16);
+  --focus-ring: #f0c860;
+}
+
+/* ═══ 前端打磨 v1：移动端汉堡导航（红版兜底） ═══ */
+@media (max-width: 980px) {
+  .nav {
+    background: rgba(42, 20, 20, 0.97);
+    border-color: #4a2a2a;
+  }
+  .nav-toggle-btn {
+    background: rgba(42, 20, 20, 0.72);
+    color: #f5efe3;
+    border-color: #4a2a2a;
+  }
 }

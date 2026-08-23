@@ -3,8 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-      <title>KnowHow</title>
-      <meta name="description" content="KnowHow：法律新媒体平台，提供影视、时政、论坛、法律时效、律师推广等服务">
+      <title>KnowHow · 法律新媒体 · AI法律咨询</title>
+      <meta name="description" content="KnowHow 法律新媒体平台：法律知识内容、时政法律时效、律师服务连接与在线 AI 法律咨询">
+      <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c82828'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='38' font-weight='bold' fill='%23f0c860' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+      <meta name="theme-color" content="#1a0d0d">
+      <meta name="robots" content="index,follow">
+      <meta property="og:type" content="website">
+      <meta property="og:site_name" content="KnowHow">
+      <meta property="og:title" content="KnowHow · 法律新媒体平台">
+      <meta property="og:description" content="法律内容传播 + 在线 AI 法律咨询 + 律师服务连接">
+      <meta property="og:image" content="https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&amp;fit=crop&amp;w=1200&amp;q=80">
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="KnowHow · 法律新媒体平台">
+      <meta name="twitter:description" content="法律内容传播 + 在线 AI 法律咨询 + 律师服务连接">
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+  <link rel="preconnect" href="https://player.bilibili.com">
+  <link rel="dns-prefetch" href="https://images.unsplash.com">
+  <link rel="dns-prefetch" href="https://loremflickr.com">
+  <link rel="dns-prefetch" href="https://www.youtube.com">
+  <link rel="dns-prefetch" href="https://player.bilibili.com">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="red-theme.css" id="redThemeCss">
   <script>
@@ -34,6 +51,45 @@
       });
     })();
   </script>
+  <script>
+    /* 移动端汉堡菜单：点击展开/收起，切换路由后自动收起 */
+    (function () {
+      var btn = null, nav = null;
+      function setOpen(open) {
+        if (!nav) return;
+        nav.classList.toggle('nav-open', open);
+        if (btn) {
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          btn.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+        }
+        document.body.classList.toggle('nav-open-body', open);
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        btn = document.getElementById('navToggleBtn');
+        nav = document.getElementById('siteNav');
+        if (!btn || !nav) return;
+        btn.addEventListener('click', function () {
+          setOpen(!nav.classList.contains('nav-open'));
+        });
+        window.addEventListener('hashchange', function () { setOpen(false); });
+      });
+    })();
+  </script>
+  <script>
+    /* 登录模态框：ESC 键与点击遮罩关闭（复用 app.js 暴露的全局 closeAuthModal） */
+    (function () {
+      document.addEventListener('DOMContentLoaded', function () {
+        var modal = document.getElementById('authModal');
+        if (!modal) return;
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && modal.classList.contains('show')) closeAuthModal();
+        });
+        modal.addEventListener('click', function (e) {
+          if (e.target === modal) closeAuthModal();
+        });
+      });
+    })();
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -42,10 +98,13 @@
             <div class="brand">KnowHow</div>
             <details class="brand-easter" aria-label="法力无Byte彩蛋">
               <summary>法力无Byte</summary>
-              <div class="brand-easter-text" onclick="this.closest('details').open = false">你认真走的每一步，都会把未来照亮一点。—— 法力无Byte</div>
+              <button type="button" class="brand-easter-text" onclick="this.closest('details').open = false">你认真走的每一步，都会把未来照亮一点。—— 法力无Byte</button>
             </details>
           </div>
-      <nav class="nav" aria-label="主导航">
+      <button type="button" id="navToggleBtn" class="nav-toggle-btn" aria-label="打开菜单" aria-expanded="false" aria-controls="siteNav">
+        <span class="hamb-line"></span><span class="hamb-line"></span><span class="hamb-line"></span>
+      </button>
+      <nav class="nav" id="siteNav" aria-label="主导航">
         <a href="#/" class="nav-link">首页</a>
         <a href="#/about" class="nav-link">简介</a>
         <a href="#/films" class="nav-link">影视</a>
@@ -67,12 +126,12 @@
     </div>
   </header>
 
-  <main id="app" class="container" role="main" aria-live="polite"></main>
+  <main id="app" class="container" role="main"></main>
 
   <!-- 登录注册模态框 -->
-  <div id="authModal" class="auth-modal">
+  <div id="authModal" class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-modal-content">
-      <button class="auth-close" onclick="closeAuthModal()">×</button>
+      <button class="auth-close" onclick="closeAuthModal()" aria-label="关闭">×</button>
       <div class="auth-modal-header">
         <h2 id="authTitle">登录</h2>
         <p id="authSubtitle">欢迎回到法律新媒体</p>
@@ -83,28 +142,28 @@
         <button class="auth-tab" onclick="switchAuthTab('register')">注册</button>
       </div>
       
-      <form id="authForm" class="auth-form" autocomplete="off">
+      <form id="authForm" class="auth-form">
         <div class="auth-form-group">
           <label for="authUsername">用户名</label>
-          <input type="text" id="authUsername" name="username" required placeholder="请输入用户名">
+          <input type="text" id="authUsername" name="username" required placeholder="请输入用户名" autocomplete="username">
           <div class="auth-error" id="usernameError"></div>
         </div>
         
         <div class="auth-form-group">
           <label for="authPassword">密码</label>
-          <input type="password" id="authPassword" name="password" required placeholder="请输入密码">
+          <input type="password" id="authPassword" name="password" required placeholder="请输入密码" autocomplete="current-password">
           <div class="auth-error" id="passwordError"></div>
         </div>
         
         <div class="auth-form-group" id="confirmPasswordGroup" style="display: none;">
           <label for="authConfirmPassword">确认密码</label>
-          <input type="password" id="authConfirmPassword" name="confirmPassword" placeholder="请再次输入密码">
+          <input type="password" id="authConfirmPassword" name="confirmPassword" placeholder="请再次输入密码" autocomplete="new-password">
           <div class="auth-error" id="confirmPasswordError"></div>
         </div>
         
             <div class="auth-form-group" id="emailGroup" style="display: none;">
               <label for="authEmail">邮箱（可选）</label>
-              <input type="email" id="authEmail" name="email" placeholder="请输入邮箱地址">
+              <input type="email" id="authEmail" name="email" placeholder="请输入邮箱地址" autocomplete="email">
               <div class="auth-error" id="emailError"></div>
             </div>
             
@@ -136,7 +195,7 @@
         <p class="small">让法律更可亲，让求助更有回应</p>
         <details class="corner-note" aria-label="Jasper手记">
           <summary>Jasper</summary>
-          <div class="corner-note-content" onclick="this.closest('details').open = false">你走过的每一步，都会在未来回头时发光。—— Jasper</div>
+          <button type="button" class="corner-note-content" onclick="this.closest('details').open = false">你走过的每一步，都会在未来回头时发光。—— Jasper</button>
         </details>
     </div>
   </footer>

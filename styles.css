@@ -11589,3 +11589,127 @@ body.modal-open { overflow: hidden; }
   width: 16px;
   height: 16px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   前端打磨 v1（2026-08-23）
+   修复未定义 CSS 变量 + 移动端适配 + 无障碍 + 视觉细修
+   ─────────────────────────────────────────────────────────────
+   全部为叠加式追加，不修改上方历史样式。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* A. 补齐此前从未定义、却被大量引用的变量（原版主题） */
+:root {
+  --text-secondary: #94a3b8;   /* 全站 57 处引用（次级文字），此前两文件均未定义 */
+  --card-bg: #0b1220;          /* 律师端/案件/客户卡片背景，此前仅红版定义致原版透明 */
+  --accent: #60a5fa;           /* 简介页标题与强调色 */
+  --hover-bg: #0d1626;         /* 交流中心 tab 悬停底色 */
+  --focus-ring: #22c55e;       /* 键盘焦点可见环 */
+}
+
+/* B. 移动端汉堡导航（桌面 ≥981px 视觉不变） */
+.nav-toggle-btn { display: none; }
+@media (max-width: 980px) {
+  .header-inner { position: relative; }
+  .nav-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: auto;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    z-index: 52;
+  }
+  .hamb-line {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  .nav-toggle-btn[aria-expanded="true"] .hamb-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-toggle-btn[aria-expanded="true"] .hamb-line:nth-child(2) { opacity: 0; }
+  .nav-toggle-btn[aria-expanded="true"] .hamb-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px 14px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    z-index: 49;
+  }
+  .nav.nav-open { display: flex; }
+  .nav .nav-link,
+  .nav .theme-toggle {
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 14px;
+    justify-content: flex-start;
+    border-radius: 10px;
+  }
+  .nav .theme-toggle { margin: 4px 0 0; }
+}
+body.nav-open-body { overflow: hidden; }
+
+/* C. 移动端排版与表格 */
+@media (max-width: 640px) {
+  .hero-title { font-size: 32px; }
+}
+@media (max-width: 480px) {
+  .hero-title { font-size: 28px; line-height: 1.25; }
+  .hero-subtitle { font-size: 15px; }
+  .hero-section { padding: 28px 16px; }
+  .container { padding: 16px 14px; }
+  .section { padding: 16px; }
+  .card { padding: 12px; }
+}
+@media (max-width: 768px) {
+  .ops-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    min-width: 560px;
+  }
+}
+
+/* D. 无障碍：键盘焦点环 + 彩蛋按钮重置 */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.theme-toggle:focus-visible {
+  outline-color: var(--focus-ring);
+}
+button.brand-easter-text,
+button.corner-note-content {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* F. 视觉细修：按钮过渡统一（红版已有 transition，原版补齐后两主题手感一致） */
+.btn { transition: background .18s ease, border-color .18s ease, box-shadow .18s ease; }
