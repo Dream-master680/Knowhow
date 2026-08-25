@@ -12265,3 +12265,16 @@ body.settings-open { overflow: hidden; }
   .cc-nav-select { max-width: none; }
   .cc-stats .stat-item { min-width: 0; flex: 1; padding: 10px 8px; }
 }
+
+/* ── 论坛优化补丁：回复点赞高亮 / 帖子内编辑表单 / 展开按钮 ──────────── */
+.forum-reply-actions .btn.liked {
+  color: var(--c-gold, #e8b64c);
+  border-color: var(--c-gold, #e8b64c);
+  background: var(--c-gold-soft, rgba(232, 182, 76, 0.14));
+}
+.forum-post .forum-new-post-form {
+  margin: 14px 0 4px;
+}
+.forum-reply-expand {
+  margin-top: 10px;
+}

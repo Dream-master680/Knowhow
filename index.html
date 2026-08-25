@@ -27,14 +27,13 @@
   <script>
     /* 多主题 + 护眼 + 字号：首帧前从 localStorage 恢复三态，防闪烁 */
     (function () {
-      var THEMES = ['red', 'red-white', 'blue-white', 'patriotic', 'deep-blue', 'original'];
-      var NAMES = { 'red': '红色法治', 'red-white': '红白', 'blue-white': '蓝白',
-                    'patriotic': '爱国爱党', 'deep-blue': '深蓝', 'original': '原版' };
+      var THEMES = ['deep-blue', 'red-white'];
+      var NAMES = { 'deep-blue': '深蓝', 'red-white': '红白' };
       var root = document.documentElement;
-      function validTheme(t) { return THEMES.indexOf(t) >= 0 ? t : 'red'; }
+      function validTheme(t) { return THEMES.indexOf(t) >= 0 ? t : 'deep-blue'; }
       function validFont(f) { return (f === 'lg' || f === 'xl') ? f : 'std'; }
       function read(k, def) { try { var v = localStorage.getItem(k); return v === null ? def : v; } catch (e) { return def; } }
-      var theme = validTheme(read('kh_theme', 'red'));
+      var theme = validTheme(read('kh_theme', 'deep-blue'));
       var font = validFont(read('kh_font', 'std'));
       var eyecare = (read('kh_eyecare', '0') === '1') ? 'on' : 'off';
       root.setAttribute('data-theme', theme);
@@ -65,7 +64,7 @@
         if (lab) lab.textContent = NAMES[theme];
         var btn = document.getElementById('themeToggle');
         if (btn) btn.addEventListener('click', function () {
-          var cur = validTheme(root.getAttribute('data-theme') || 'red');
+          var cur = validTheme(root.getAttribute('data-theme') || 'deep-blue');
           window.KH.applyTheme(THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length]);
         });
       });
@@ -220,12 +219,8 @@
         <div class="settings-section">
           <div class="settings-sec-title">主题风格</div>
           <div class="theme-grid">
-            <label class="theme-card"><input type="radio" name="khTheme" value="red" checked><span class="theme-swatch sw-red"></span><span class="theme-name">红色法治</span></label>
+            <label class="theme-card"><input type="radio" name="khTheme" value="deep-blue" checked><span class="theme-swatch sw-deep-blue"></span><span class="theme-name">深蓝</span></label>
             <label class="theme-card"><input type="radio" name="khTheme" value="red-white"><span class="theme-swatch sw-red-white"></span><span class="theme-name">红白</span></label>
-            <label class="theme-card"><input type="radio" name="khTheme" value="blue-white"><span class="theme-swatch sw-blue-white"></span><span class="theme-name">蓝白</span></label>
-            <label class="theme-card"><input type="radio" name="khTheme" value="patriotic"><span class="theme-swatch sw-patriotic"></span><span class="theme-name">爱国爱党</span></label>
-            <label class="theme-card"><input type="radio" name="khTheme" value="deep-blue"><span class="theme-swatch sw-deep-blue"></span><span class="theme-name">深蓝</span></label>
-            <label class="theme-card"><input type="radio" name="khTheme" value="original"><span class="theme-swatch sw-original"></span><span class="theme-name">原版</span></label>
           </div>
         </div>
         <div class="settings-section">
@@ -264,6 +259,7 @@
   </footer>
 
   <script src="config.js"></script>
+  <script src="api.js"></script>
   <script src="civilcode.js"></script>
   <script src="ai.js"></script>
   <script src="app.js"></script>

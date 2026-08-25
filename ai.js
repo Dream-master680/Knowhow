@@ -9,8 +9,8 @@
   'use strict';
 
   const CONFIG = window.AI_CONFIG || {};
-  const BASE_URL = (CONFIG.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '');
-  const ENDPOINT = BASE_URL + '/chat/completions';
+  // 请求统一走同源后端代理 /api/ai（真实 Key 在服务端 server/.env，浏览器不接触）
+  const ENDPOINT = '/api/ai';
   const DEFAULT_MODEL = CONFIG.DEEPSEEK_MODEL || 'deepseek-v4-flash';
 
   /* ── HTML 转义 ─────────────────────────────── */
@@ -69,9 +69,9 @@
    */
   async function callDeepSeek(messages, opts) {
     opts = opts || {};
-    const apiKey = String(CONFIG.DEEPSEEK_API_KEY || '').trim();
-    if (!apiKey) {
-      return { ok: false, error: '未配置 DeepSeek API Key：请打开 config.js 填写 DEEPSEEK_API_KEY' };
+    // 双击打开（file:// 协议）无后端，无法调用 AI；给出友好提示
+    if (location.protocol === 'file:') {
+      return { ok: false, error: 'AI 服务需通过后端访问：在 server 目录运行 node server.js，然后访问 http://localhost:3000' };
     }
 
     const payload = {
@@ -86,10 +86,7 @@
     try {
       resp = await fetch(ENDPOINT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + apiKey
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
     } catch (err) {
@@ -100,7 +97,7 @@
       let detail = '';
       try { const j = await resp.json(); detail = (j && j.error && j.error.message) || ''; } catch (e) { /* noop */ }
       let msg = '请求失败（HTTP ' + resp.status + '）';
-      if (resp.status === 401) msg = 'DeepSeek API Key 无效，请检查 config.js';
+      if (resp.status === 401) msg = 'DeepSeek API Key 无效，请联系站点管理员';
       else if (resp.status === 402) msg = 'DeepSeek 账户余额不足，请到 platform.deepseek.com 充值';
       else if (resp.status === 429) msg = '请求过于频繁，请稍后再试';
       else if (resp.status >= 500) msg = 'DeepSeek 服务暂时不可用，请稍后再试';
@@ -274,21 +271,23 @@
   // 历史按用户隔离：切换账号各自独立 key，避免串号
   function widgetUserId() {
     try {
-      const u = JSON.parse(localStorage.getItem('ln_auth_v1') || 'null');
+      const u = window.Sync ? window.Sync.getAuth() : JSON.parse(localStorage.getItem('ln_auth_v1') || 'null');
       return (u && u.id) ? String(u.id) : 'guest';
     } catch (e) { return 'guest'; }
   }
   function widgetKey() { return 'ln_ai_widget_history_' + widgetUserId(); }
 
   function loadWidgetHistory() {
-    try {
-      const arr = JSON.parse(localStorage.getItem(widgetKey()) || '[]');
-      return Array.isArray(arr) ? arr.slice(-30) : [];
-    } catch (e) { return []; }
+    const arr = window.Sync
+      ? window.Sync.read(widgetKey(), [])
+      : JSON.parse(localStorage.getItem(widgetKey()) || '[]');
+    return Array.isArray(arr) ? arr.slice(-30) : [];
   }
 
   function persistWidget() {
-    try { localStorage.setItem(widgetKey(), JSON.stringify(WIDGET.history.slice(-30))); } catch (e) { /* ignore */ }
+    const data = WIDGET.history.slice(-30);
+    if (window.Sync) window.Sync.write(widgetKey(), data);
+    else { try { localStorage.setItem(widgetKey(), JSON.stringify(data)); } catch (e) { /* ignore */ } }
   }
 
   const WIDGET = {

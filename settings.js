@@ -14,7 +14,7 @@
   function q(s) { return document.querySelector(s); }
 
   function syncUI() {
-    var theme = root().getAttribute('data-theme') || 'red';
+    var theme = root().getAttribute('data-theme') || 'deep-blue';
     var radios = document.querySelectorAll('input[name="khTheme"]');
     for (var i = 0; i < radios.length; i++) {
       radios[i].checked = (radios[i].value === theme);

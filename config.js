@@ -1,17 +1,13 @@
 /**
  * KnowHow AI 配置
  * ─────────────────────────────────────────────
- * 在这里填入你的 DeepSeek API Key：
- *   1. 打开 https://platform.deepseek.com 登录（需充值）
- *   2. 左侧「API Keys」→ 创建 → 复制以 sk- 开头的 Key
- *   3. 粘贴到下方 DEEPSEEK_API_KEY
- *
- * ⚠️ 安全提醒：这是纯前端方案，Key 会暴露给所有访问者。
- * 目前仅适合自用 / 演示。公开上线前需改用后端代理保护 Key。
+ * ⚠️ 安全提醒：真实 DeepSeek API Key 已移到服务端 server/.env（后端代理）。
+ * 浏览器端不再持有 Key：server/routes/ai.js 会注入 Authorization 头。
+ * 配置 Key 请编辑 server/.env 的 DEEPSEEK_API_KEY（不要在仓库里提交真实 Key）。
  */
 window.AI_CONFIG = {
-  /* DeepSeek API Key（sk- 开头） */
-  DEEPSEEK_API_KEY: 'sk-6ffea145193a4eacaabcb6967ef1658b',
+  /* DeepSeek API Key —— 已移至服务端 .env，此处不再需要（留空） */
+  DEEPSEEK_API_KEY: '',
 
   /* 模型：deepseek-v4-flash（快、便宜）或 deepseek-v4-pro（更强、约3倍价） */
   DEEPSEEK_MODEL: 'deepseek-v4-flash',

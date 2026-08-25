@@ -1,17 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════════
-   KnowHow 多主题系统 themes.css（2026-08-23）
+   KnowHow 多主题系统 themes.css（2026-08-24）
    ─────────────────────────────────────────────────────────────────────
-   架构：6 主题 × 护眼模式 × 字号，全部由 <html> 属性驱动：
-     data-theme   = red / red-white / blue-white / patriotic / deep-blue / original
+   架构：2 主题 × 护眼模式 × 字号，全部由 <html> 属性驱动：
+     data-theme   = deep-blue（默认，暗） / red-white（亮）
      data-eyecare = off / on
      data-font    = std / lg / xl
    变量层：每主题一份完整变量集（legacy 变量供 styles.css 引用 + 语义变量 --c-*）。
-   规则层：一套引用 --c-* 的规则，仅作用于非 original 主题（:root:not([data-theme="original"])）。
-   original 主题=原生 styles.css 观感，规则层不介入，保证像素级不变。
+   规则层：一套引用 --c-* 的规则，作用于所有主题（:root:not([data-theme="original"])，
+   因 original 主题已移除，该选择器恒真，保留无需改动）。
+   基础 :root 块：legacy 的红色法治变量，仅作「无 data-theme」兜底（正常页面内联脚本
+   始终写入 data-theme，实际不会命中；deep-blue/red-white 变量集完整，可完全覆盖）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────────────
-   0. 变量：red「红色法治」= 默认（无 data-theme 时兜底，亦是 data-theme="red" 的值）
+   0. 兜底变量：legacy 红色法治值，仅当 <html> 无 data-theme 时生效（JS 禁用兜底）
    ───────────────────────────────────────────────────────────────────── */
 :root {
   /* ── legacy 变量（styles.css / ai.js 引用，原样保留自迁移前 red-theme.css） ── */
@@ -189,168 +191,6 @@
 /* ─────────────────────────────────────────────────────────────────────
    1. 变量：original「原版」（复刻迁移前 styles.css 各 :root + 现状；规则层不介入）
    ───────────────────────────────────────────────────────────────────── */
-:root[data-theme="original"] {
-  /* legacy 变量（覆盖 red 默认，恢复原版值） */
-  --bg: #0a1222;
-  --panel: #0f1b31;
-  --card: #101d36;
-  --card-bg: #0b1220;
-  --card-2: #12223f;
-  --text: #e7edf8;
-  --text-strong: #ffffff;
-  --muted: #9aa8c0;
-  --border: #22314f;
-  --border-soft: #1b2a45;
-  --primary: #3a76d2;
-  --primary-600: #4a86e2;
-  --primary-hover: #5b93ec;
-  --primary-700: #2b5ea8;
-  --primary-soft: rgba(58, 118, 210, 0.14);
-  --primary-glow: rgba(58, 118, 210, 0.35);
-  --gold: #c6a66a;
-  --gold-2: #b89a5c;
-  --gold-soft: rgba(198, 166, 106, 0.15);
-  --gold-glow: rgba(198, 166, 106, 0.3);
-  --amber: #fbbf24;
-  --danger: #dc4f5f;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --radius: 14px;
-  --radius-lg: 18px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --font-title: linear-gradient(135deg, #3a76d2, #10b981);
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --fx-accent-a: #25d0ff;
-  --fx-accent-b: #8d7bff;
-  --fx-accent-c: #39f3bb;
-  --tech-cyan: #25d0ff;
-  --tech-violet: #8d7bff;
-  --tech-glow: rgba(37, 208, 255, 0.28);
-  --text-secondary: #94a3b8;
-  --accent: #60a5fa;
-  --hover-bg: #0d1626;
-  --focus-ring: #22c55e;
-  /* AI 咨询个性化（原版浅色玻璃） */
-  --ai-avatar-bot-bg: linear-gradient(135deg, #4f46e5, #7c3aed);
-  --ai-avatar-user-bg: linear-gradient(135deg, #0ea5e9, #2563eb);
-  --ai-role-color: var(--muted);
-  --ai-time-color: var(--muted);
-  --ai-btn-color: var(--muted);
-  --ai-btn-border: var(--border);
-  --ai-btn-hover-bg: rgba(79, 70, 229, 0.08);
-  --ai-chip-bg: rgba(255, 255, 255, 0.72);
-  --ai-chip-border: #e2e8f0;
-  --ai-chip-text: #334155;
-  --ai-chip-hover: linear-gradient(135deg, #4f46e5, #7c3aed);
-  --ai-toolbar-bg: rgba(248, 250, 252, 0.82);
-  --ai-toolbar-border: #e2e8f0;
-
-  /* 语义变量（设置面板 / 护眼用） */
-  --c-bg: var(--bg);
-  --c-panel: var(--panel);
-  --c-card: var(--card);
-  --c-card-end: #12223f;
-  --c-text: var(--text);
-  --c-text-strong: #ffffff;
-  --c-muted: var(--muted);
-  --c-border: var(--border);
-  --c-border-soft: #1b2a45;
-  --c-placeholder: #6b7d99;
-  --c-label: #deecfb;
-  --c-glass: rgba(255, 255, 255, 0.72);
-  --c-primary: #3a76d2;
-  --c-primary-600: #4a86e2;
-  --c-primary-hover: #5b93ec;
-  --c-primary-700: #2b5ea8;
-  --c-primary-deep: #2b5ea8;
-  --c-primary-soft: rgba(58, 118, 210, 0.14);
-  --c-primary-glow: rgba(58, 118, 210, 0.35);
-  --c-primary-on: #fff;
-  --c-gold: #c6a66a;
-  --c-gold-2: #b89a5c;
-  --c-gold-soft: rgba(198, 166, 106, 0.15);
-  --c-gold-glow: rgba(198, 166, 106, 0.3);
-  --c-gold-on: #0a1222;
-  --c-font-title: linear-gradient(135deg, #3a76d2, #10b981);
-  --c-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --c-spinner: #25d0ff;
-  --c-btn-primary-grad: linear-gradient(100deg, #25d0ff, #8d7bff 56%, #39f3bb);
-  --c-btn-primary-grad-hover: linear-gradient(100deg, #4fd8ff, #8d7bff 56%, #39f3bb);
-  --c-btn-gold-grad: linear-gradient(180deg, #f7d378, #e8b64c);
-  --c-btn-gold-grad-hover: linear-gradient(180deg, #ffe09a, #f0c860);
-  --c-auth-submit-grad: linear-gradient(100deg, #25d0ff, #8d7bff 56%, #39f3bb);
-  --c-auth-submit-grad-hover: linear-gradient(100deg, #4fd8ff, #8d7bff 56%, #39f3bb);
-  --c-msg-own-grad: linear-gradient(135deg, #4f46e5, #7c3aed);
-  --c-fab-grad: linear-gradient(135deg, #4f46e5, #7c3aed);
-  --c-fab-grad-hover: linear-gradient(135deg, #5b5bf5, #8b5cf6);
-  --c-ai-header-grad: linear-gradient(135deg, #4f46e5, #7c3aed);
-  --c-card-grad: linear-gradient(rgba(9, 20, 38, 0.88), rgba(8, 17, 32, 0.86));
-  --c-card-border: rgba(120, 170, 230, 0.2);
-  --c-card-border-hover: rgba(120, 170, 230, 0.35);
-  --c-card-shine: linear-gradient(130deg, rgba(120, 170, 230, 0.05), rgba(0, 0, 0, 0));
-  --c-page-header-grad: linear-gradient(135deg, rgba(10, 18, 34, 0.92), rgba(8, 16, 31, 0.88));
-  --c-sidebar-grad: linear-gradient(180deg, rgba(10, 18, 34, 0.92), rgba(8, 16, 31, 0.88));
-  --c-auth-bg: linear-gradient(165deg, rgba(10, 18, 33, 0.94), rgba(8, 16, 31, 0.9));
-  --c-body-grad: linear-gradient(160deg, rgba(6, 15, 30, 0.86), rgba(7, 17, 33, 0.82));
-  --c-body-glow-a: radial-gradient(1200px 800px at 15% -15%, rgba(198, 166, 106, 0.08) 0%, transparent 52%);
-  --c-body-glow-b: radial-gradient(1000px 900px at 100% 5%, rgba(58, 118, 210, 0.12) 0%, transparent 58%);
-  --c-hero-grad: linear-gradient(135deg, rgba(5, 16, 34, 0.82), rgba(8, 22, 42, 0.68));
-  --c-hero-glow: radial-gradient(700px 420px at 50% 0%, rgba(37, 208, 255, 0.1), transparent 70%);
-  --c-hero-pre-glow: radial-gradient(600px 360px at 50% -10%, rgba(37, 208, 255, 0.08), transparent 70%);
-  --c-hero-title-grad: linear-gradient(135deg, #3a76d2, #10b981);
-  --c-hero-sub: #9aa8c0;
-  --c-hero-quote-border: rgba(231, 244, 255, 0.92);
-  --c-stat-bg: rgba(10, 18, 34, 0.5);
-  --c-header-bg: linear-gradient(180deg, rgba(10, 18, 34, 0.92), rgba(10, 18, 34, 0.78));
-  --c-header-border: rgba(198, 166, 106, 0.32);
-  --c-brand-grad: linear-gradient(135deg, #eaf6ff, #25d0ff 58%, #8d7bff);
-  --c-nav-link: #e7edf8;
-  --c-nav-hover-bg: rgba(58, 118, 210, 0.16);
-  --c-nav-hover-text: #fff;
-  --c-nav-active-bg: rgba(58, 118, 210, 0.2);
-  --c-nav-active-text: #fff;
-  --c-nav-underline: linear-gradient(90deg, #25d0ff, #8d7bff);
-  --c-nav-underline-glow: rgba(37, 208, 255, 0.5);
-  --c-footer-bg: rgba(10, 18, 34, 0.72);
-  --c-footer-border: rgba(198, 166, 106, 0.2);
-  --c-modal-ambient:
-    radial-gradient(360px 160px at -6% -10%, rgba(37, 208, 255, 0.10), transparent 60%),
-    radial-gradient(260px 140px at 106% 0%, rgba(141, 123, 255, 0.10), transparent 62%);
-  --c-cursor-aura: radial-gradient(circle, rgba(37, 208, 255, 0.1) 0%, rgba(141, 123, 255, 0.05) 42%, rgba(0, 0, 0, 0) 72%);
-  --c-tech-grid:
-    linear-gradient(to right, rgba(37, 208, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(141, 123, 255, 0.028) 1px, transparent 1px);
-  --c-tech-beam: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(37, 208, 255, 0.25), rgba(141, 123, 255, 0.2), rgba(0, 0, 0, 0));
-  --c-ion-particle: radial-gradient(circle, rgba(220, 240, 255, 0.75), rgba(37, 208, 255, 0.34) 45%, rgba(141, 123, 255, 0.1));
-  --c-input-bg: rgba(13, 27, 49, 0.85);
-  --c-focus: #7fb7ff;
-  --c-focus-ring: 0 0 0 3px rgba(37, 208, 255, 0.14), 0 0 22px rgba(58, 118, 210, 0.14);
-  --c-tab-bg: rgba(10, 18, 34, 0.5);
-  --c-tab-active-bg: rgba(37, 208, 255, 0.14);
-  --c-badge-text: #bfe2ff;
-  --c-btn-bg: rgba(0, 0, 0, 0);
-  --c-btn-hover-bg: rgba(255, 255, 255, 0.06);
-  --c-btn-hover-border: rgba(198, 166, 106, 0.45);
-  --c-btn-secondary-bg: rgba(10, 18, 34, 0.55);
-  --c-btn-gold-text: #0a1222;
-  --c-btn-primary-shadow: 0 4px 14px rgba(37, 208, 255, 0.25);
-  --c-btn-primary-shadow-hover: 0 6px 18px rgba(37, 208, 255, 0.35);
-  --c-ai-panel-bg: rgba(255, 255, 255, 0.92);
-  --c-ai-panel-border: rgba(255, 255, 255, 0.6);
-  --c-ai-messages-bg: rgba(248, 250, 252, 0.6);
-  --c-fab-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
-  --c-fab-shadow-hover: 0 12px 28px rgba(79, 70, 229, 0.45);
-  --c-empty-border: #33415e;
-  --c-empty-bg: rgba(10, 18, 34, 0.4);
-  --c-scroll-thumb: #33415e;
-  --c-scroll-thumb-hover: #41537a;
-  --c-about-border: rgba(120, 170, 230, 0.25);
-  --c-about-text: #cde2f8;
-  --c-lawyer-avatar-grad: linear-gradient(135deg, #25d0ff, #8d7bff);
-  --c-ai-role-bg: rgba(79, 70, 229, 0.12);
-  --c-toolbar-tip: #9aa8c0;
-  --c-chip-hover-text: #fff;
-}
 
 /* ─────────────────────────────────────────────────────────────────────
    1b. 变量：red-white「红白」（亮色）
@@ -525,342 +365,10 @@
 /* ─────────────────────────────────────────────────────────────────────
    1c. 变量：blue-white「蓝白」（亮色）
    ───────────────────────────────────────────────────────────────────── */
-:root[data-theme="blue-white"] {
-  --bg: #f4f8ff;
-  --panel: #ffffff;
-  --card: #ffffff;
-  --card-bg: #ffffff;
-  --card-2: #eef4fd;
-  --text: #22385a;
-  --text-strong: #0f2444;
-  --muted: #7a93ad;
-  --border: #dbe5f3;
-  --border-soft: #e6eef9;
-  --primary: #3a76d2;
-  --primary-600: #4a86e2;
-  --primary-hover: #5b93ec;
-  --primary-700: #2b5ea8;
-  --primary-soft: rgba(58, 118, 210, 0.12);
-  --primary-glow: rgba(58, 118, 210, 0.22);
-  --gold: #b07a2c;
-  --gold-2: #c8863d;
-  --gold-soft: rgba(176, 122, 44, 0.14);
-  --gold-glow: rgba(176, 122, 44, 0.25);
-  --amber: #f59f00;
-  --danger: #dc4f5f;
-  --success: #2f9e44;
-  --warning: #f08c00;
-  --radius: 14px;
-  --radius-lg: 18px;
-  --shadow: 0 10px 30px rgba(30, 60, 110, 0.12);
-  --font-title: linear-gradient(135deg, #3a76d2, #10b981);
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --fx-accent-a: #3a76d2;
-  --fx-accent-b: #16b8a6;
-  --fx-accent-c: #7fb4f2;
-  --tech-cyan: #16b8a6;
-  --tech-violet: #7fb4f2;
-  --tech-glow: rgba(58, 118, 210, 0.2);
-  --text-secondary: #6f89a6;
-  --accent: #3a76d2;
-  --hover-bg: rgba(58, 118, 210, 0.08);
-  --focus-ring: #3a76d2;
-  --ai-avatar-bot-bg: linear-gradient(135deg, #3a76d2, #2b5ea8);
-  --ai-avatar-user-bg: linear-gradient(135deg, #16b8a6, #3a76d2);
-  --ai-role-color: #2f4a70;
-  --ai-time-color: #7a93ad;
-  --ai-btn-color: #3f5a80;
-  --ai-btn-border: #dbe5f3;
-  --ai-btn-hover-bg: rgba(58, 118, 210, 0.08);
-  --ai-chip-bg: rgba(255, 255, 255, 0.85);
-  --ai-chip-border: #dbe5f3;
-  --ai-chip-text: #22385a;
-  --ai-chip-hover: linear-gradient(135deg, #3a76d2, #2b5ea8);
-  --ai-toolbar-bg: rgba(255, 255, 255, 0.85);
-  --ai-toolbar-border: #dbe5f3;
-
-  --c-bg: var(--bg);
-  --c-panel: var(--panel);
-  --c-card: var(--card);
-  --c-card-end: #eef4fd;
-  --c-text: var(--text);
-  --c-text-strong: #0f2444;
-  --c-muted: var(--muted);
-  --c-border: var(--border);
-  --c-border-soft: var(--border-soft);
-  --c-placeholder: #9fb3cc;
-  --c-label: #2f5aa8;
-  --c-glass: rgba(255, 255, 255, 0.7);
-  --c-primary: #3a76d2;
-  --c-primary-600: #4a86e2;
-  --c-primary-hover: #5b93ec;
-  --c-primary-700: #2b5ea8;
-  --c-primary-deep: #2b5ea8;
-  --c-primary-soft: rgba(58, 118, 210, 0.12);
-  --c-primary-glow: rgba(58, 118, 210, 0.22);
-  --c-primary-on: #fff;
-  --c-gold: #b07a2c;
-  --c-gold-2: #c8863d;
-  --c-gold-soft: rgba(176, 122, 44, 0.14);
-  --c-gold-glow: rgba(176, 122, 44, 0.25);
-  --c-gold-on: #fff8ec;
-  --c-font-title: linear-gradient(135deg, #3a76d2, #10b981);
-  --c-shadow: 0 10px 30px rgba(30, 60, 110, 0.12);
-  --c-spinner: #3a76d2;
-  --c-btn-primary-grad: linear-gradient(180deg, #4a86e2, #2b5ea8);
-  --c-btn-primary-grad-hover: linear-gradient(180deg, #5b93ec, #3a76d2);
-  --c-btn-gold-grad: linear-gradient(180deg, #e0b878, #b07a2c);
-  --c-btn-gold-grad-hover: linear-gradient(180deg, #f0ca90, #c8863d);
-  --c-auth-submit-grad: linear-gradient(135deg, #4a86e2, #2b5ea8);
-  --c-auth-submit-grad-hover: linear-gradient(135deg, #5b93ec, #3a76d2);
-  --c-msg-own-grad: linear-gradient(135deg, #3a76d2, #2b5ea8);
-  --c-fab-grad: linear-gradient(135deg, #3a76d2, #2b5ea8);
-  --c-fab-grad-hover: linear-gradient(135deg, #5b93ec, #3a76d2);
-  --c-ai-header-grad: linear-gradient(135deg, #3a76d2, #2b5ea8);
-  --c-card-grad: linear-gradient(180deg, #ffffff, #f2f7ff);
-  --c-card-border: rgba(58, 118, 210, 0.14);
-  --c-card-border-hover: rgba(58, 118, 210, 0.32);
-  --c-card-shine: linear-gradient(130deg, rgba(58, 118, 210, 0.06), rgba(0, 0, 0, 0));
-  --c-page-header-grad: linear-gradient(160deg, #ffffff, #eef4fd);
-  --c-sidebar-grad: linear-gradient(180deg, #ffffff, #eef4fd);
-  --c-auth-bg: linear-gradient(180deg, #ffffff, #eef4fd);
-  --c-body-grad: linear-gradient(160deg, #f4f8ff, #eef4fd);
-  --c-body-glow-a: radial-gradient(1000px 640px at 50% -12%, rgba(58, 118, 210, 0.06), transparent 60%);
-  --c-body-glow-b: radial-gradient(800px 520px at 108% 108%, rgba(22, 184, 166, 0.05), transparent 60%);
-  --c-hero-grad: linear-gradient(180deg, rgba(244, 248, 255, 0.72), rgba(238, 244, 253, 0.85));
-  --c-hero-glow: radial-gradient(700px 420px at 50% 0%, rgba(58, 118, 210, 0.1), transparent 70%);
-  --c-hero-pre-glow: radial-gradient(600px 360px at 50% -10%, rgba(58, 118, 210, 0.07), transparent 70%);
-  --c-hero-title-grad: linear-gradient(135deg, #3a76d2, #10b981);
-  --c-hero-sub: #5a7394;
-  --c-hero-quote-border: rgba(58, 118, 210, 0.45);
-  --c-stat-bg: rgba(255, 255, 255, 0.7);
-  --c-header-bg: rgba(255, 255, 255, 0.85);
-  --c-header-border: rgba(58, 118, 210, 0.16);
-  --c-brand-grad: linear-gradient(135deg, #3a76d2, #7fb4f2 55%, #16b8a6);
-  --c-nav-link: #22385a;
-  --c-nav-hover-bg: rgba(58, 118, 210, 0.08);
-  --c-nav-hover-text: #3a76d2;
-  --c-nav-active-bg: rgba(58, 118, 210, 0.12);
-  --c-nav-active-text: #2b5ea8;
-  --c-nav-underline: linear-gradient(90deg, #3a76d2, #16b8a6);
-  --c-nav-underline-glow: rgba(58, 118, 210, 0.4);
-  --c-footer-bg: rgba(255, 255, 255, 0.8);
-  --c-footer-border: rgba(58, 118, 210, 0.15);
-  --c-modal-ambient:
-    radial-gradient(360px 160px at -6% -10%, rgba(58, 118, 210, 0.08), transparent 60%),
-    radial-gradient(260px 140px at 106% 0%, rgba(22, 184, 166, 0.08), transparent 62%);
-  --c-cursor-aura: radial-gradient(circle, rgba(58, 118, 210, 0.07) 0%, rgba(22, 184, 166, 0.04) 42%, rgba(0, 0, 0, 0) 72%);
-  --c-tech-grid:
-    linear-gradient(to right, rgba(58, 118, 210, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(22, 184, 166, 0.04) 1px, transparent 1px);
-  --c-tech-beam: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(58, 118, 210, 0.14), rgba(22, 184, 166, 0.1), rgba(0, 0, 0, 0));
-  --c-ion-particle: radial-gradient(circle, rgba(210, 235, 255, 0.55), rgba(58, 118, 210, 0.3) 45%, rgba(22, 184, 166, 0.08));
-  --c-input-bg: #f2f7ff;
-  --c-focus: rgba(58, 118, 210, 0.45);
-  --c-focus-ring: 0 0 0 3px rgba(58, 118, 210, 0.12), 0 0 22px rgba(58, 118, 210, 0.12);
-  --c-tab-bg: rgba(58, 118, 210, 0.06);
-  --c-tab-active-bg: rgba(58, 118, 210, 0.12);
-  --c-badge-text: #2b5ea8;
-  --c-btn-bg: #ffffff;
-  --c-btn-hover-bg: #edf4ff;
-  --c-btn-hover-border: rgba(58, 118, 210, 0.4);
-  --c-btn-secondary-bg: rgba(255, 255, 255, 0.7);
-  --c-btn-gold-text: #fff8ec;
-  --c-btn-primary-shadow: 0 4px 14px rgba(58, 118, 210, 0.2);
-  --c-btn-primary-shadow-hover: 0 6px 18px rgba(58, 118, 210, 0.28);
-  --c-ai-panel-bg: rgba(255, 255, 255, 0.96);
-  --c-ai-panel-border: rgba(58, 118, 210, 0.16);
-  --c-ai-messages-bg: #f2f7ff;
-  --c-fab-shadow: 0 8px 24px rgba(58, 118, 210, 0.25);
-  --c-fab-shadow-hover: 0 12px 28px rgba(58, 118, 210, 0.35);
-  --c-empty-border: #c9d8ec;
-  --c-empty-bg: rgba(255, 255, 255, 0.6);
-  --c-scroll-thumb: #c9d8ec;
-  --c-scroll-thumb-hover: #b6c9e2;
-  --c-about-border: rgba(58, 118, 210, 0.2);
-  --c-about-text: #2f4a70;
-  --c-lawyer-avatar-grad: linear-gradient(135deg, #3a76d2, #16b8a6);
-  --c-ai-role-bg: rgba(58, 118, 210, 0.1);
-  --c-toolbar-tip: #7a93ad;
-  --c-chip-hover-text: #fff;
-  --c-toggle-bg: rgba(255, 255, 255, 0.8);
-  --c-toggle-hover-bg: #edf4ff;
-  --c-about-icon-bg: rgba(58, 118, 210, 0.12);
-  --c-about-icon-border: rgba(58, 118, 210, 0.22);
-  --c-about-marker: rgba(58, 118, 210, 0.75);
-  --c-btn-disabled-bg: #e3eaf3;
-  --c-btn-disabled-border: #d3dde9;
-}
 
 /* ─────────────────────────────────────────────────────────────────────
    1d. 变量：patriotic「爱国爱党」（红金，暗色）
    ───────────────────────────────────────────────────────────────────── */
-:root[data-theme="patriotic"] {
-  --bg: #170d0a;
-  --panel: #241511;
-  --card: #2a1a12;
-  --card-bg: #2a1a12;
-  --card-2: #321f14;
-  --text: #f6ead8;
-  --text-strong: #fff7e6;
-  --muted: #c4a68c;
-  --border: #5a3c28;
-  --border-soft: #402a1a;
-  --primary: #d62828;
-  --primary-600: #e03838;
-  --primary-hover: #f04545;
-  --primary-700: #a81818;
-  --primary-soft: rgba(214, 40, 40, 0.14);
-  --primary-glow: rgba(214, 40, 40, 0.35);
-  --gold: #f0c860;
-  --gold-2: #e0b04a;
-  --gold-soft: rgba(240, 200, 96, 0.15);
-  --gold-glow: rgba(240, 200, 96, 0.3);
-  --amber: #ffb84d;
-  --danger: #ff6b6b;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --radius: 14px;
-  --radius-lg: 18px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --font-title: linear-gradient(135deg, #fff3d6 0%, #f0c860 100%);
-  --glass-bg: rgba(42, 26, 18, 0.72);
-  --fx-accent-a: #d62828;
-  --fx-accent-b: #f0c860;
-  --fx-accent-c: #ffb84d;
-  --tech-cyan: #f0c860;
-  --tech-violet: #d62828;
-  --tech-glow: rgba(240, 200, 96, 0.25);
-  --text-secondary: #d0b48f;
-  --accent: #f0c860;
-  --hover-bg: rgba(214, 40, 40, 0.16);
-  --focus-ring: #f0c860;
-  --ai-avatar-bot-bg: linear-gradient(135deg, #d62828, #8f1010);
-  --ai-avatar-user-bg: linear-gradient(135deg, #f0c860, #d62828);
-  --ai-role-color: #ead6b8;
-  --ai-time-color: #c4a68c;
-  --ai-btn-color: #d8bfa0;
-  --ai-btn-border: #5a3c28;
-  --ai-btn-hover-bg: rgba(214, 40, 40, 0.18);
-  --ai-chip-bg: rgba(42, 26, 18, 0.6);
-  --ai-chip-border: #5a3c28;
-  --ai-chip-text: #ead6b8;
-  --ai-chip-hover: linear-gradient(135deg, #d62828, #a81818);
-  --ai-toolbar-bg: rgba(36, 21, 14, 0.82);
-  --ai-toolbar-border: #5a3c28;
-
-  --c-bg: var(--bg);
-  --c-panel: var(--panel);
-  --c-card: var(--card);
-  --c-card-end: #321f14;
-  --c-text: var(--text);
-  --c-text-strong: #fff7e6;
-  --c-muted: var(--muted);
-  --c-border: var(--border);
-  --c-border-soft: var(--border-soft);
-  --c-placeholder: #b08a68;
-  --c-label: #e6c9a8;
-  --c-glass: rgba(42, 26, 18, 0.72);
-  --c-primary: #d62828;
-  --c-primary-600: #e03838;
-  --c-primary-hover: #f04545;
-  --c-primary-700: #a81818;
-  --c-primary-deep: #8f1010;
-  --c-primary-soft: rgba(214, 40, 40, 0.14);
-  --c-primary-glow: rgba(214, 40, 40, 0.35);
-  --c-primary-on: #fff;
-  --c-gold: #f0c860;
-  --c-gold-2: #e0b04a;
-  --c-gold-soft: rgba(240, 200, 96, 0.15);
-  --c-gold-glow: rgba(240, 200, 96, 0.3);
-  --c-gold-on: #2a1508;
-  --c-font-title: linear-gradient(135deg, #fff3d6 0%, #f0c860 100%);
-  --c-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --c-spinner: #f0c860;
-  --c-btn-primary-grad: linear-gradient(180deg, #e03838, #b02424);
-  --c-btn-primary-grad-hover: linear-gradient(180deg, #f04545, #d62828);
-  --c-btn-gold-grad: linear-gradient(180deg, #f7d378, #e8b64c);
-  --c-btn-gold-grad-hover: linear-gradient(180deg, #ffe09a, #f0c860);
-  --c-auth-submit-grad: linear-gradient(135deg, #e03838, #b02424);
-  --c-auth-submit-grad-hover: linear-gradient(135deg, #f04545, #d62828);
-  --c-msg-own-grad: linear-gradient(135deg, #d62828, #a81818);
-  --c-fab-grad: linear-gradient(135deg, #d62828, #a81818);
-  --c-fab-grad-hover: linear-gradient(135deg, #f04545, #d62828);
-  --c-ai-header-grad: linear-gradient(135deg, #d62828, #8f1010);
-  --c-card-grad: linear-gradient(180deg, rgba(43, 27, 16, 0.92), rgba(36, 21, 14, 0.9));
-  --c-card-border: rgba(240, 200, 96, 0.14);
-  --c-card-border-hover: rgba(240, 200, 96, 0.38);
-  --c-card-shine: linear-gradient(130deg, rgba(240, 200, 96, 0.06), rgba(214, 40, 40, 0.05) 45%, rgba(0, 0, 0, 0));
-  --c-page-header-grad: linear-gradient(160deg, rgba(50, 31, 20, 0.92), rgba(36, 21, 14, 0.88));
-  --c-sidebar-grad: linear-gradient(180deg, rgba(43, 27, 16, 0.9), rgba(36, 21, 14, 0.86));
-  --c-auth-bg: linear-gradient(180deg, #2e1c10, #221208);
-  --c-body-grad: linear-gradient(160deg, rgba(23, 13, 10, 0.9), rgba(40, 22, 14, 0.84));
-  --c-body-glow-a: radial-gradient(1000px 640px at 50% -12%, rgba(214, 40, 40, 0.16), transparent 60%);
-  --c-body-glow-b: radial-gradient(800px 520px at 108% 108%, rgba(240, 200, 96, 0.1), transparent 60%);
-  --c-hero-grad: linear-gradient(180deg, rgba(23, 13, 10, 0.55), rgba(23, 13, 10, 0.82));
-  --c-hero-glow: radial-gradient(700px 420px at 50% 0%, rgba(240, 200, 96, 0.16), transparent 70%);
-  --c-hero-pre-glow: radial-gradient(600px 360px at 50% -10%, rgba(240, 200, 96, 0.1), transparent 70%);
-  --c-hero-title-grad: linear-gradient(135deg, #fff3d6 0%, #f0c860 100%);
-  --c-hero-sub: #e8d5bc;
-  --c-hero-quote-border: rgba(240, 200, 96, 0.5);
-  --c-stat-bg: rgba(50, 26, 16, 0.5);
-  --c-header-bg: rgba(28, 14, 9, 0.82);
-  --c-header-border: rgba(240, 200, 96, 0.22);
-  --c-brand-grad: linear-gradient(135deg, #f0c860, #fff3d6 55%, #d62828);
-  --c-nav-link: #e8d5bc;
-  --c-nav-hover-bg: rgba(214, 40, 40, 0.16);
-  --c-nav-hover-text: #fff;
-  --c-nav-active-bg: rgba(214, 40, 40, 0.18);
-  --c-nav-active-text: #fff;
-  --c-nav-underline: linear-gradient(90deg, #d62828, #f0c860);
-  --c-nav-underline-glow: rgba(240, 200, 96, 0.5);
-  --c-footer-bg: rgba(23, 13, 10, 0.88);
-  --c-footer-border: rgba(240, 200, 96, 0.25);
-  --c-modal-ambient:
-    radial-gradient(360px 160px at -6% -10%, rgba(214, 40, 40, 0.14), transparent 60%),
-    radial-gradient(260px 140px at 106% 0%, rgba(240, 200, 96, 0.13), transparent 62%);
-  --c-cursor-aura: radial-gradient(circle, rgba(240, 200, 96, 0.1) 0%, rgba(214, 40, 40, 0.06) 42%, rgba(0, 0, 0, 0) 72%);
-  --c-tech-grid:
-    linear-gradient(to right, rgba(240, 200, 96, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(214, 40, 40, 0.028) 1px, transparent 1px);
-  --c-tech-beam: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(240, 200, 96, 0.28), rgba(214, 40, 40, 0.22), rgba(0, 0, 0, 0));
-  --c-ion-particle: radial-gradient(circle, rgba(255, 240, 220, 0.75), rgba(240, 200, 96, 0.34) 45%, rgba(214, 40, 40, 0.1));
-  --c-input-bg: #1f0f08;
-  --c-focus: rgba(240, 200, 96, 0.55);
-  --c-focus-ring: 0 0 0 3px rgba(240, 200, 96, 0.14), 0 0 22px rgba(214, 40, 40, 0.14);
-  --c-tab-bg: rgba(42, 26, 18, 0.5);
-  --c-tab-active-bg: rgba(214, 40, 40, 0.18);
-  --c-badge-text: #ffe2a8;
-  --c-btn-bg: rgba(50, 28, 18, 0.9);
-  --c-btn-hover-bg: rgba(60, 34, 22, 0.95);
-  --c-btn-hover-border: rgba(240, 200, 96, 0.45);
-  --c-btn-secondary-bg: rgba(50, 26, 16, 0.55);
-  --c-btn-gold-text: #2a1508;
-  --c-btn-primary-shadow: 0 4px 14px rgba(214, 40, 40, 0.28);
-  --c-btn-primary-shadow-hover: 0 6px 18px rgba(214, 40, 40, 0.4);
-  --c-ai-panel-bg: rgba(40, 22, 12, 0.96);
-  --c-ai-panel-border: rgba(240, 200, 96, 0.22);
-  --c-ai-messages-bg: rgba(28, 14, 9, 0.6);
-  --c-fab-shadow: 0 8px 24px rgba(214, 40, 40, 0.4);
-  --c-fab-shadow-hover: 0 12px 28px rgba(214, 40, 40, 0.5);
-  --c-empty-border: #6a442c;
-  --c-empty-bg: rgba(42, 26, 18, 0.4);
-  --c-scroll-thumb: #5a3c28;
-  --c-scroll-thumb-hover: #6a4a30;
-  --c-about-border: rgba(240, 200, 96, 0.18);
-  --c-about-text: #ead6b8;
-  --c-lawyer-avatar-grad: linear-gradient(135deg, #f0c860, #d62828);
-  --c-ai-role-bg: rgba(214, 40, 40, 0.16);
-  --c-toolbar-tip: #c4a68c;
-  --c-chip-hover-text: #fff;
-  --c-toggle-bg: rgba(42, 26, 18, 0.72);
-  --c-toggle-hover-bg: rgba(60, 34, 22, 0.8);
-  --c-about-icon-bg: rgba(240, 200, 96, 0.14);
-  --c-about-icon-border: rgba(240, 200, 96, 0.24);
-  --c-about-marker: rgba(240, 200, 96, 0.85);
-  --c-btn-disabled-bg: #4a2a1a;
-  --c-btn-disabled-border: #5a3c28;
-}
 
 /* ─────────────────────────────────────────────────────────────────────
    1e. 变量：deep-blue「深蓝」（暗色）
@@ -1036,46 +544,6 @@
    1f. 护眼模式 [data-eyecare="on"]：只暖化 A 组表面/文字/边框（低对比暖黄），
        不动主色 B 组与渐变 C 组；不用 filter，避免破坏 position:fixed。
    ───────────────────────────────────────────────────────────────────── */
-:root[data-theme="red"][data-eyecare="on"],
-:root:not([data-theme])[data-eyecare="on"] {
-  --bg: #221412;
-  --panel: #2a1a18;
-  --card: #2e1e1b;
-  --card-bg: #2e1e1b;
-  --card-2: #35231f;
-  --text: #f0e4d6;
-  --text-strong: #f8efe2;
-  --muted: #c4a694;
-  --border: #5a3e34;
-  --border-soft: #3f2a23;
-  --glass-bg: rgba(46, 30, 27, 0.72);
-  --c-bg: #221412;
-  --c-panel: #2a1a18;
-  --c-card: #2e1e1b;
-  --c-card-end: #35231f;
-  --c-text: #f0e4d6;
-  --c-text-strong: #f8efe2;
-  --c-muted: #c4a694;
-  --c-border: #5a3e34;
-  --c-border-soft: #3f2a23;
-  --c-placeholder: #b3907c;
-  --c-label: #e0cbb8;
-  --c-glass: rgba(46, 30, 27, 0.72);
-  --c-body-grad: linear-gradient(160deg, rgba(34, 20, 18, 0.9), rgba(46, 28, 24, 0.84));
-  --c-card-grad: linear-gradient(180deg, rgba(46, 30, 27, 0.92), rgba(40, 26, 23, 0.9));
-  --c-input-bg: #241513;
-  --c-header-bg: rgba(38, 22, 19, 0.82);
-  --c-footer-bg: rgba(34, 20, 18, 0.88);
-  --c-hero-grad: linear-gradient(180deg, rgba(34, 20, 18, 0.55), rgba(34, 20, 18, 0.82));
-  --c-ai-panel-bg: rgba(46, 30, 27, 0.96);
-  --c-ai-messages-bg: rgba(34, 20, 18, 0.6);
-  --c-sidebar-grad: linear-gradient(180deg, rgba(46, 30, 27, 0.9), rgba(40, 26, 23, 0.86));
-  --c-page-header-grad: linear-gradient(160deg, rgba(53, 35, 31, 0.92), rgba(40, 26, 23, 0.88));
-  --c-auth-bg: linear-gradient(180deg, #2e1e1b, #241513);
-  --c-empty-bg: rgba(46, 30, 27, 0.4);
-  --c-scroll-thumb: #5a3e34;
-  --c-scroll-thumb-hover: #6a4a3e;
-}
 :root[data-theme="red-white"][data-eyecare="on"] {
   --bg: #f9f2e8;
   --panel: #fffaf2;
@@ -1114,84 +582,6 @@
   --c-empty-bg: rgba(255, 250, 242, 0.6);
   --c-scroll-thumb: #dfd0ba;
   --c-scroll-thumb-hover: #d2c0a6;
-}
-:root[data-theme="blue-white"][data-eyecare="on"] {
-  --bg: #f7f2e9;
-  --panel: #fffaf3;
-  --card: #fffaf3;
-  --card-bg: #fffaf3;
-  --card-2: #fbf3e5;
-  --text: #3f3a2c;
-  --text-strong: #2e2918;
-  --muted: #94897a;
-  --border: #ded2bd;
-  --border-soft: #ece2d0;
-  --glass-bg: rgba(255, 250, 243, 0.7);
-  --c-bg: #f7f2e9;
-  --c-panel: #fffaf3;
-  --c-card: #fffaf3;
-  --c-card-end: #fbf3e5;
-  --c-text: #3f3a2c;
-  --c-text-strong: #2e2918;
-  --c-muted: #94897a;
-  --c-border: #ded2bd;
-  --c-border-soft: #ece2d0;
-  --c-placeholder: #a99a82;
-  --c-label: #5c4e36;
-  --c-glass: rgba(255, 250, 243, 0.7);
-  --c-body-grad: linear-gradient(160deg, #f7f2e9, #f3ecdd);
-  --c-card-grad: linear-gradient(180deg, #fffaf3, #fbf3e5);
-  --c-input-bg: #fbf4e8;
-  --c-header-bg: rgba(255, 250, 243, 0.85);
-  --c-footer-bg: rgba(255, 250, 243, 0.8);
-  --c-hero-grad: linear-gradient(180deg, rgba(247, 242, 233, 0.72), rgba(243, 236, 221, 0.85));
-  --c-ai-panel-bg: rgba(255, 250, 243, 0.96);
-  --c-ai-messages-bg: #f6efe2;
-  --c-sidebar-grad: linear-gradient(180deg, #fffaf3, #fbf3e7);
-  --c-page-header-grad: linear-gradient(160deg, #fffaf3, #f9f0df);
-  --c-auth-bg: linear-gradient(180deg, #fffaf3, #f9f0df);
-  --c-empty-bg: rgba(255, 250, 243, 0.6);
-  --c-scroll-thumb: #ded2bd;
-  --c-scroll-thumb-hover: #d0c2a8;
-}
-:root[data-theme="patriotic"][data-eyecare="on"] {
-  --bg: #1f1308;
-  --panel: #2a1a0e;
-  --card: #2f1f10;
-  --card-bg: #2f1f10;
-  --card-2: #372411;
-  --text: #f2e6c9;
-  --text-strong: #faf0d6;
-  --muted: #c9b48e;
-  --border: #5f4528;
-  --border-soft: #412f18;
-  --glass-bg: rgba(47, 31, 16, 0.72);
-  --c-bg: #1f1308;
-  --c-panel: #2a1a0e;
-  --c-card: #2f1f10;
-  --c-card-end: #372411;
-  --c-text: #f2e6c9;
-  --c-text-strong: #faf0d6;
-  --c-muted: #c9b48e;
-  --c-border: #5f4528;
-  --c-border-soft: #412f18;
-  --c-placeholder: #b09468;
-  --c-label: #e2cba4;
-  --c-glass: rgba(47, 31, 16, 0.72);
-  --c-body-grad: linear-gradient(160deg, rgba(31, 19, 8, 0.9), rgba(46, 30, 14, 0.84));
-  --c-card-grad: linear-gradient(180deg, rgba(47, 31, 16, 0.92), rgba(39, 27, 14, 0.9));
-  --c-input-bg: #261505;
-  --c-header-bg: rgba(33, 21, 9, 0.82);
-  --c-footer-bg: rgba(31, 19, 8, 0.88);
-  --c-hero-grad: linear-gradient(180deg, rgba(31, 19, 8, 0.55), rgba(31, 19, 8, 0.82));
-  --c-ai-panel-bg: rgba(47, 31, 16, 0.96);
-  --c-ai-messages-bg: rgba(31, 19, 8, 0.6);
-  --c-sidebar-grad: linear-gradient(180deg, rgba(47, 31, 16, 0.9), rgba(39, 27, 14, 0.86));
-  --c-page-header-grad: linear-gradient(160deg, rgba(55, 36, 17, 0.92), rgba(39, 27, 14, 0.88));
-  --c-auth-bg: linear-gradient(180deg, #2f1f10, #261505);
-  --c-empty-bg: rgba(47, 31, 16, 0.4);
-  --c-scroll-thumb: #5f4528;
-  --c-scroll-thumb-hover: #6f5230;
 }
 :root[data-theme="deep-blue"][data-eyecare="on"] {
   --bg: #141e2a;
@@ -1234,81 +624,6 @@
 }
 
 /* original 无规则层，护眼走直接选择器覆盖 */
-:root[data-theme="original"][data-eyecare="on"] body {
-  background-color: #141b28;
-  background-image:
-    linear-gradient(160deg, rgba(16, 23, 38, 0.9), rgba(14, 22, 40, 0.84)),
-    radial-gradient(1200px 800px at 15% -15%, rgba(198, 166, 106, 0.08) 0%, transparent 52%),
-    radial-gradient(1000px 900px at 100% 5%, rgba(58, 118, 210, 0.12) 0%, transparent 58%),
-    var(--site-bg-image, url('https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1800&q=80'));
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  color: #e9e2d0;
-}
-:root[data-theme="original"][data-eyecare="on"] .site-header {
-  background: rgba(14, 22, 40, 0.92);
-  border-bottom-color: rgba(198, 166, 106, 0.32);
-}
-:root[data-theme="original"][data-eyecare="on"] .brand-easter summary { color: #c9bda6; }
-:root[data-theme="original"][data-eyecare="on"] .nav-link { color: #dcd3c0; }
-:root[data-theme="original"][data-eyecare="on"] .card,
-:root[data-theme="original"][data-eyecare="on"] .list-item,
-:root[data-theme="original"][data-eyecare="on"] .news-card,
-:root[data-theme="original"][data-eyecare="on"] .forum-post,
-:root[data-theme="original"][data-eyecare="on"] .lawyer-card,
-:root[data-theme="original"][data-eyecare="on"] .film-card,
-:root[data-theme="original"][data-eyecare="on"] .admin-module-card,
-:root[data-theme="original"][data-eyecare="on"] .admin-item {
-  background: linear-gradient(rgba(16, 23, 38, 0.9), rgba(14, 22, 40, 0.88));
-  border-top-color: rgba(120, 170, 230, 0.2);
-}
-:root[data-theme="original"][data-eyecare="on"] .card-title,
-:root[data-theme="original"][data-eyecare="on"] .news-card-title,
-:root[data-theme="original"][data-eyecare="on"] .forum-post-title { color: #f4ecd8; }
-:root[data-theme="original"][data-eyecare="on"] .card-meta,
-:root[data-theme="original"][data-eyecare="on"] .news-card-meta,
-:root[data-theme="original"][data-eyecare="on"] .forum-post-meta { color: #b7ac96; }
-:root[data-theme="original"][data-eyecare="on"] .site-footer p { color: #dcd3c0; }
-:root[data-theme="original"][data-eyecare="on"] input[type="text"],
-:root[data-theme="original"][data-eyecare="on"] input[type="date"],
-:root[data-theme="original"][data-eyecare="on"] input[type="email"],
-:root[data-theme="original"][data-eyecare="on"] input[type="password"],
-:root[data-theme="original"][data-eyecare="on"] textarea,
-:root[data-theme="original"][data-eyecare="on"] select {
-  background: rgba(13, 27, 49, 0.85);
-  border-color: #42536e;
-  color: #e9e2d0;
-}
-:root[data-theme="original"][data-eyecare="on"] .hero-subtitle,
-:root[data-theme="original"][data-eyecare="on"] .hero-careline { color: #cdc3ae; }
-:root[data-theme="original"][data-eyecare="on"] .ai-chat-panel,
-:root[data-theme="original"][data-eyecare="on"] .ai-consult-box { background: rgba(255, 252, 244, 0.94); }
-:root[data-theme="original"][data-eyecare="on"] .ai-chat-messages,
-:root[data-theme="original"][data-eyecare="on"] .ai-consult-messages { background: rgba(250, 246, 236, 0.6); }
-:root[data-theme="original"][data-eyecare="on"] .ai-msg-assistant,
-:root[data-theme="original"][data-eyecare="on"] .ai-consult-bot {
-  background: #fffdf6;
-  color: #4a4130;
-}
-:root[data-theme="original"][data-eyecare="on"] ::-webkit-scrollbar-thumb { background: #42536e; }
-
-/* ─────────────────────────────────────────────────────────────────────
-   2. 规则层（迁移自 red-theme.css，字面量→语义变量；仅非 original 主题生效）
-   ───────────────────────────────────────────────────────────────────── */
-/* 全局表面 */
-:root:not([data-theme="original"]) body {
-  background-color: var(--c-bg);
-  background-image:
-    var(--c-body-grad),
-    var(--c-body-glow-a),
-    var(--c-body-glow-b),
-    var(--site-bg-image, url('https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1800&q=80'));
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  color: var(--c-text);
-}
 
 /* 环境特效改红金 */
 :root:not([data-theme="original"]) .modal-content::before,
@@ -1972,12 +1287,8 @@
 /* ─────────────────────────────────────────────────────────────────────
    3. 主题色卡 swatch（设置面板用）
    ───────────────────────────────────────────────────────────────────── */
-.sw-red        { background: linear-gradient(135deg, #e03131, #1a0d0d); }
 .sw-red-white  { background: linear-gradient(135deg, #fff7f4, #e03131); }
-.sw-blue-white { background: linear-gradient(135deg, #f4f8ff, #3a76d2); }
-.sw-patriotic  { background: linear-gradient(135deg, #c82828, #f0c860); }
 .sw-deep-blue  { background: linear-gradient(135deg, #0f172a, #3a76d2); }
-.sw-original   { background: linear-gradient(135deg, #0a1222, #25d0ff); }
 
 /* ─────────────────────────────────────────────────────────────────────
    4. 字号 zoom（data-font）
@@ -1988,3 +1299,190 @@ html[data-font="lg"] .ai-consult-messages { height: 48vh; }
 html[data-font="xl"] .ai-consult-messages { height: 44vh; }
 html[data-font="lg"] body,
 html[data-font="xl"] body { overflow-x: hidden; }
+
+
+/* ── 亮色补漏：styles.css 里硬编码的深色卡片背景统一走语义变量（深蓝/红白都适配） ── */
+.feature-item, .activity-item, .comment-item, .related-item, .comment-preview {
+  background: var(--c-card-grad, rgba(10, 18, 33, 0.6));
+}
+.feature-item:hover, .activity-item:hover, .related-item:hover, .comment-item:hover {
+  background: var(--c-card-end, rgba(10, 18, 33, 0.8));
+}
+.forum-reply, .forum-reply-form, .forum-post-footer {
+  background: var(--c-card-end, rgba(10, 18, 33, 0.6));
+}
+.forum-reply-form { border-color: var(--c-border, #4a2a2a); }
+.auth-tabs { background: var(--c-tab-bg, rgba(10, 18, 33, 0.6)); }
+.film-stats .stat-item { background: var(--c-stat-bg, rgba(10, 18, 33, 0.6)); }
+
+/* ── 亮色补漏（续）：登录/互动弹窗里 styles.css legacy 硬编码的深色海军蓝 → 语义变量 ──
+   说明：styles.css 10384 起的 #authModal 规则带 !important 且含 ID 选择器，比规则层优先，
+   导致红白亮色主题下整个登录弹窗仍是深蓝。此处用 :root[data-theme="red-white"] 前缀提高
+   特异性并带 !important 压过它；深蓝主题下 legacy 深蓝本身即正确观感，故不覆盖。 */
+:root[data-theme="red-white"] #authModal .auth-modal-content {
+  color: var(--c-text, #4a2b28) !important;
+  background: var(--c-auth-bg, linear-gradient(180deg, #ffffff, #fdf3f1)) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+  box-shadow: 0 24px 60px rgba(60, 30, 30, 0.22) !important;
+}
+:root[data-theme="red-white"] #authModal .auth-modal-header h2 {
+  background: var(--c-font-title, linear-gradient(135deg, #e03131, #b45309)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+:root[data-theme="red-white"] #authModal .auth-modal-header p,
+:root[data-theme="red-white"] #authSubtitle { color: var(--c-muted, #9a7d79) !important; }
+:root[data-theme="red-white"] #authModal .auth-tab { color: var(--c-muted, #9a7d79) !important; }
+:root[data-theme="red-white"] #authModal .auth-form-group label { color: var(--c-label, #5a3a36) !important; }
+:root[data-theme="red-white"] #authModal .auth-form-group input,
+:root[data-theme="red-white"] #authModal .auth-form-group select {
+  color: var(--c-text, #4a2b28) !important;
+  background: var(--c-input-bg, #fff7f5) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+}
+:root[data-theme="red-white"] #authModal .auth-form-group input::placeholder { color: var(--c-muted, #9a7d79) !important; }
+:root[data-theme="red-white"] #authModal .auth-demo {
+  color: var(--c-text, #4a2b28) !important;
+  background: var(--c-card-end, #fff7f5) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+}
+:root[data-theme="red-white"] #authModal .auth-demo .small { color: var(--c-muted, #9a7d79) !important; }
+:root[data-theme="red-white"] #authModal .auth-demo .kbd,
+:root[data-theme="red-white"] #authModal .kbd {
+  color: var(--c-text-strong, #2a1414) !important;
+  background: var(--c-card-end, #fff7f5) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+}
+:root[data-theme="red-white"] #authModal .auth-close { color: var(--c-muted, #9a7d79) !important; }
+:root[data-theme="red-white"] #authModal .auth-close:hover { color: var(--c-text-strong, #2a1414) !important; }
+
+/* 法律互动弹窗 legacy 深色 → 语义变量 */
+:root[data-theme="red-white"] .interaction-modal .modal-content {
+  color: var(--c-text, #4a2b28) !important;
+  background: var(--c-auth-bg, linear-gradient(180deg, #ffffff, #fdf3f1)) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+  box-shadow: 0 22px 56px rgba(60, 30, 30, 0.2), 0 0 0 1px var(--c-border, #e6d3cf) !important;
+}
+
+/* ── 亮色补漏（续）：body 背景 ──
+   styles.css 10155 把 body 背景硬编码成深海军蓝渐变（叠在 --site-bg-image 照片上），
+   而 --c-body-grad 变量一直没被引用（死变量），导致红白亮色主题整页仍是深蓝底。
+   此处按主题应用 --c-body-grad（红白=浅色渐变，不透明，盖住照片；深蓝主题保持原深蓝）。 */
+:root[data-theme="red-white"] body {
+  background-image: var(--c-body-grad, linear-gradient(160deg, #fdf6f4, #faf0ee)), var(--site-bg-image, url('')) !important;
+  background-color: var(--c-bg, #fdf6f4) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+}
+
+/* ── 亮色补漏（续）：简介页 legacy 深海军蓝 → 红白亮色 ──
+   styles.css 1966 起整块简介页硬编码深蓝底 + 浅蓝文字，规则层只改了部分文字颜色、
+   从未改背景，导致红白主题下简介页整页仍是深蓝。此处按主题改背景、照片遮罩与残留浅色文字。 */
+:root[data-theme="red-white"] .about-hero,
+:root[data-theme="red-white"] .about-content,
+:root[data-theme="red-white"] .about-section-card,
+:root[data-theme="red-white"] .about-module-card,
+:root[data-theme="red-white"] .about-side-card,
+:root[data-theme="red-white"] .about-stat,
+:root[data-theme="red-white"] .about-kv-list div,
+:root[data-theme="red-white"] .about-quick-links a {
+  background: var(--c-card-grad, linear-gradient(180deg, #ffffff, #fff7f5)) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+}
+:root[data-theme="red-white"] .about-hero::before,
+:root[data-theme="red-white"] .about-content::before {
+  background-image: var(--c-card-grad, linear-gradient(180deg, #ffffff, #fff7f5)) !important;
+  opacity: 1 !important;
+}
+:root[data-theme="red-white"] .about-kv-list div,
+:root[data-theme="red-white"] .about-quick-links a { color: var(--c-text, #4a2b28) !important; }
+:root[data-theme="red-white"] .about-kv-list strong { color: var(--c-text-strong, #2a1414) !important; }
+:root[data-theme="red-white"] .about-module-icon {
+  background: var(--c-primary-soft, rgba(224, 49, 49, 0.12)) !important;
+  border-color: var(--c-primary, #e03131) !important;
+}
+:root[data-theme="red-white"] .about-quick-links a:hover {
+  background: var(--c-card-end, #fff7f5) !important;
+  border-color: var(--c-primary, #e03131) !important;
+}
+:root[data-theme="red-white"] .about-tags span {
+  color: var(--c-text, #4a2b28) !important;
+  background: var(--c-primary-soft, rgba(224, 49, 49, 0.12)) !important;
+  border-color: var(--c-primary, #e03131) !important;
+}
+
+/* ── 亮色补漏（续）：红白主题下仍残留的硬编码深海军蓝块 ──
+   ① .care-banner（论坛/新闻/电影/互动/法条页的关怀横幅，原 rgba(10,21,38,.6)）
+   ② .corner-note summary / .brand-easter summary（角落折叠小胶囊，原 rgba(9,20,38,…)）
+   ③ .search-box input（电影搜索框 #filmSearch，原 rgba(10,18,33,.8)；该 input 未声明
+      type 属性，主题规则层的 input[type="text"] 匹配不到，故被 .search-box input 的
+      深色硬编码盖住）
+   这些元素在深蓝主题下本就是暗色观感，无需处理；仅红白亮色主题下覆盖。 */
+:root[data-theme="red-white"] .care-banner {
+  background: var(--c-primary-soft, rgba(224, 49, 49, 0.12)) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+  color: var(--c-text, #4a2b28) !important;
+}
+:root[data-theme="red-white"] .corner-note summary,
+:root[data-theme="red-white"] .brand-easter summary {
+  background: var(--c-card-end, #fff7f5) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+  color: var(--c-muted, #9a7d79) !important;
+}
+:root[data-theme="red-white"] .corner-note summary:hover,
+:root[data-theme="red-white"] .brand-easter:hover summary {
+  color: var(--c-primary, #e03131) !important;
+  border-color: var(--c-card-border-hover, rgba(224, 49, 49, 0.32)) !important;
+}
+:root[data-theme="red-white"] .search-box input {
+  background: var(--c-input-bg, #fff7f5) !important;
+  border-color: var(--c-border, #e6d3cf) !important;
+  color: var(--c-text, #4a2b28) !important;
+}
+:root[data-theme="red-white"] .search-box input::placeholder { color: var(--c-placeholder, #b8a09c) !important; }
+:root[data-theme="red-white"] .search-box input:focus {
+  border-color: var(--c-focus, rgba(224, 49, 49, 0.45)) !important;
+  box-shadow: var(--c-focus-ring, 0 0 0 3px rgba(224, 49, 49, 0.12)) !important;
+}
+
+/* ── 亮色补漏（续）：页面容器 ::after 深海军蓝覆盖层 → 红白浅色 ──
+   styles.css 10616 起给各内容页容器（.films-page/.news-page/.forum-page/…）盖了一层
+   rgba(6,15,29,.78→.66) 的深海军蓝渐变（::after，z-index:0 铺满整个页面区域），
+   深色主题下是暗色页底，红白亮色下就变成「白卡片浮在黑色透明底上」。
+   红白主题覆盖为浅色暖调渐变，并把 ::before 照片降为几乎不可见（保留一丝氛围）。 */
+:root[data-theme="red-white"] .films-page::after,
+:root[data-theme="red-white"] .news-page::after,
+:root[data-theme="red-white"] .forum-page::after,
+:root[data-theme="red-white"] .law-updates-page::after,
+:root[data-theme="red-white"] .lawyers-page::after,
+:root[data-theme="red-white"] .film-detail-page::after,
+:root[data-theme="red-white"] .news-detail-page::after,
+:root[data-theme="red-white"] .lawyer-detail-page::after,
+:root[data-theme="red-white"] .film-comments-page::after,
+:root[data-theme="red-white"] .interaction-container::after,
+:root[data-theme="red-white"] .messages-container-new::after {
+  background: linear-gradient(180deg, rgba(253, 246, 244, 0.72), rgba(250, 240, 238, 0.9)) !important;
+}
+:root[data-theme="red-white"] .films-page::before,
+:root[data-theme="red-white"] .news-page::before,
+:root[data-theme="red-white"] .forum-page::before,
+:root[data-theme="red-white"] .law-updates-page::before,
+:root[data-theme="red-white"] .lawyers-page::before,
+:root[data-theme="red-white"] .film-detail-page::before,
+:root[data-theme="red-white"] .news-detail-page::before,
+:root[data-theme="red-white"] .lawyer-detail-page::before,
+:root[data-theme="red-white"] .film-comments-page::before,
+:root[data-theme="red-white"] .interaction-container::before,
+:root[data-theme="red-white"] .messages-container-new::before {
+  opacity: 0.08 !important;
+}
+
+/* ── 亮色补漏（续）：页脚内阴影（原 inset 0 8px 24px rgba(0,0,0,.18)）──
+   红白亮色下顶部那条黑色内阴影带会显得突兀，调浅。 */
+:root[data-theme="red-white"] .site-footer {
+  box-shadow: inset 0 8px 24px rgba(60, 30, 30, 0.05) !important;
+}

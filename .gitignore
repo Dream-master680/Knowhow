@@ -1,0 +1,18 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# 后端配置与数据库（含密钥，绝不提交）
+server/.env
+server/data.db
+server/data.db-journal
+server/data.db-wal
+server/data.db-shm
+
+# 本地测试临时文件（每次测完即删，不应残留）
+_t_*.html
+_probe*.html
+_probe*.py
+_*.txt
+_shot*.png
+_test_output/

@@ -17,7 +17,9 @@
     auth: 'ln_auth_v1'
   };
 
+  // 存储读写：优先走同步桥 Sync（本地缓存镜像 + 服务器持久化），无后端时回退纯 localStorage
   const readStorage = (key, fallback) => {
+    if (window.Sync) return window.Sync.read(key, fallback);
     try {
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : fallback;
@@ -27,6 +29,7 @@
     }
   };
   const writeStorage = (key, value) => {
+    if (window.Sync) { window.Sync.write(key, value); return; }
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn('writeStorage error', e); }
   };
 
@@ -47,8 +50,10 @@
         try {
           if (!payload || typeof payload !== 'object') return false;
           Object.entries(payload).forEach(([k, v]) => {
-            if (typeof v === 'string') localStorage.setItem(k, v);
-            else localStorage.setItem(k, JSON.stringify(v));
+            let val = v;
+            if (typeof v === 'string') { try { val = JSON.parse(v); } catch (e) { val = v; } }
+            if (typeof val === 'string') localStorage.setItem(k, val); // 非 JSON 字符串原样存
+            else writeStorage(k, val);
           });
           return true;
         } catch (e) {
@@ -65,7 +70,7 @@
         return all;
       })() }),
       cleanExpiredData: () => 0,
-      clearAll: () => localStorage.clear(),
+      clearAll: () => { if (window.Sync) window.Sync.clearAll(); else localStorage.clear(); },
       getStorageInfo: () => {
         let totalSize = 0;
         const items = [];
@@ -206,13 +211,16 @@
 
   function seedIfEmpty() {
     migrateFilmsV2();
+    // 后端模式（Sync 在线）下，users/论坛/社区/问答等由服务器首启种子托管，本地不重复播种
+    const seedLocal = !window.Sync || window.Sync.localMode();
     if (!readStorage(STORAGE_KEYS.films)) {
       writeStorage(STORAGE_KEYS.films, filmSeedWithId());
     }
     
     // 添加示例律师用户
+    if (seedLocal) {
     let existingUsers = readStorage('users', []);
-    
+
     // 确保admin用户是超级管理员
     const adminUser = existingUsers.find(u => u.username === 'admin');
     if (adminUser) {
@@ -255,7 +263,8 @@
     }
     
     writeStorage('users', existingUsers);
-    
+    }
+
     // 添加示例律师数据
     if (!readStorage(STORAGE_KEYS.lawyers)) {
       writeStorage(STORAGE_KEYS.lawyers, [
@@ -273,7 +282,7 @@
     }
     
     // 添加示例律师案件数据
-    if (!readStorage('lawyer_cases')) {
+    if (seedLocal && !readStorage('lawyer_cases')) {
       writeStorage('lawyer_cases', [
         {
           id: nid(),
@@ -297,7 +306,7 @@
     }
     
     // 添加示例客户数据
-    if (!readStorage('lawyer_clients')) {
+    if (seedLocal && !readStorage('lawyer_clients')) {
       writeStorage('lawyer_clients', [
         {
           id: nid(),
@@ -319,7 +328,7 @@
     }
     
     // 添加示例预约数据
-    if (!readStorage('lawyer_appointments')) {
+    if (seedLocal && !readStorage('lawyer_appointments')) {
       writeStorage('lawyer_appointments', [
         {
           id: nid(),
@@ -352,17 +361,17 @@
         { id: nid(), title: '最高法发布司法解释', date: '2025-01-08', tags: ['司法解释', '法院'], summary: '统一裁判尺度，回应社会关切。' }
       ]);
     }
-    if (!readStorage(STORAGE_KEYS.forum)) {
+    if (seedLocal && !readStorage(STORAGE_KEYS.forum)) {
       writeStorage(STORAGE_KEYS.forum, [
         { id: nid(), title: '如何理解居住权？', content: '居住权与所有权的关系如何把握？', createdAt: Date.now() - 86400000, replies: [ { id: nid(), content: '可参考民法典权利体系章节。', createdAt: Date.now() - 86000000 } ] },
       ]);
     }
-    if (!readStorage(STORAGE_KEYS.community)) {
+    if (seedLocal && !readStorage(STORAGE_KEYS.community)) {
       writeStorage(STORAGE_KEYS.community, [
         { id: nid(), text: '法治宣传周活动顺利开展！', tags: ['活动'], likes: 3, createdAt: Date.now() - 3600_000 },
       ]);
     }
-    if (!readStorage(STORAGE_KEYS.qa)) {
+    if (seedLocal && !readStorage(STORAGE_KEYS.qa)) {
       writeStorage(STORAGE_KEYS.qa, [
         { id: nid(), question: '劳动合同到期公司不续签怎么办？', answers: [ { id: nid(), text: '依法支付经济补偿，注意证据留存。' } ], createdAt: Date.now() - 7200_000 }
       ]);
@@ -445,6 +454,7 @@
         img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=70' }
     ], 'title');
 
+    if (seedLocal) {
     ensureSeedCollection(STORAGE_KEYS.forum, [
       { id: nid(), title: '企业收到律师函后第一步该怎么做？', content: '是先内部排查还是立即回函？有没有标准流程建议？', createdAt: Date.now() - 4 * 86400000, views: 186, likes: 24, replies: [{ id: nid(), text: '先保全证据并启动合规核查，再由法务统一口径回复。', createdAt: Date.now() - 3 * 86400000 }] },
       { id: nid(), title: '劳动仲裁证据怎么准备最有效？', content: '聊天记录、打卡记录、工资流水如何整理更有说服力？', createdAt: Date.now() - 3 * 86400000, views: 243, likes: 31, replies: [{ id: nid(), text: '建议按“劳动关系证明-劳动事实-损失结果”三层归档。', createdAt: Date.now() - 2 * 86400000 }] },
@@ -462,6 +472,7 @@
       { id: nid(), question: '网购纠纷可以向哪里投诉维权？', answers: [{ id: nid(), text: '可向平台客服、12315、市场监管部门逐级反映并留存凭证。' }], createdAt: Date.now() - 22 * 3600_000 },
       { id: nid(), question: '离职后公司拖欠工资怎么办？', answers: [{ id: nid(), text: '先书面催告，仍不支付可申请劳动仲裁并主张经济补偿。' }], createdAt: Date.now() - 31 * 3600_000 }
     ], 'question');
+    }
 
     ensureSeedCollection(STORAGE_KEYS.lawUpdates, [
       { id: nid(), name: '民事诉讼法（相关条款完善）', effectiveDate: '2025-09-01', summary: '优化简易程序与电子送达机制，提升审判效率。' },
@@ -475,8 +486,10 @@
       { id: nid(), name: '陈律师', firm: '浙江六和律师事务所', areas: ['婚姻家事', '民商事诉讼'], bio: '擅长婚姻家事与民商事诉讼，注重调解与和解方案。', verified: false, createdAt: Date.now() - 32000 }
     ], 'name');
     
-    // 确保admin用户是唯一的超级管理员
+    // 确保admin用户是唯一的超级管理员（后端模式下由服务器保证）
+    if (seedLocal) {
     ensureSuperAdmin();
+    }
   }
 
   // 确保admin用户是唯一的超级管理员
@@ -521,7 +534,14 @@
     return readStorage(STORAGE_KEYS.auth, null);
   }
   function setAuth(user) {
-    if (user) writeStorage(STORAGE_KEYS.auth, user); else localStorage.removeItem(STORAGE_KEYS.auth);
+    if (user) {
+      // 登录态写入统一走 Sync.setSession（保留 token，兼容登录/注册/改资料各入口）
+      if (window.Sync) window.Sync.setSession(user);
+      else writeStorage(STORAGE_KEYS.auth, user);
+    } else {
+      if (window.Sync) window.Sync.remove(STORAGE_KEYS.auth);
+      else localStorage.removeItem(STORAGE_KEYS.auth);
+    }
     updateAuthUI();
     // 通知各模块（AI 悬浮助手等）账号已切换，便于按用户重新加载数据
     try { window.dispatchEvent(new CustomEvent('kh:authchange')); } catch (e) {}
@@ -969,6 +989,9 @@
 
   window.addEventListener('hashchange', navigate);
   window.addEventListener('DOMContentLoaded', () => { seedIfEmpty(); navigate(); updateAuthUI(); });
+  // 同步桥事件：bootstrap 完成 → 重渲当前页拿服务器数据；服务器不可达降级本地 → 补播被跳过的服务端键
+  window.addEventListener('kh:datasync', () => { navigate(); updateAuthUI(); });
+  window.addEventListener('kh:syncfallback', () => { seedIfEmpty(); navigate(); updateAuthUI(); });
 
   function html(strings, ...values) {
     return strings.reduce((acc, s, i) => acc + s + (values[i] ?? ''), '');
@@ -1148,6 +1171,7 @@
   }
 
   function renderLogout() {
+    if (window.Sync) window.Sync.logout(); // 在线模式吊销服务端会话（失败静默）
     setAuth(null);
     location.hash = '#/';
   }
@@ -2593,7 +2617,25 @@
     const email = document.getElementById('authEmail').value.trim();
     
     if (mode === 'login') {
-      // 登录逻辑
+      // 登录：优先走服务端（Sync 在线）；离线回退本地明文比对
+      if (window.Sync && !window.Sync.localMode()) {
+        window.Sync.login(username, password).then((res) => {
+          if (!res.ok || !res.user) {
+            showAuthError('auth', res.error || '用户名或密码错误');
+            return;
+          }
+          const u = { ...res.user, loginAt: Date.now() };
+          setAuth(u);
+          closeAuthModal();
+          showLoginSuccess(u);
+          setTimeout(() => {
+            location.hash = '#/';
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          }, 100);
+        });
+        return;
+      }
+      // 登录逻辑（离线兜底）
       let user = null;
       const users = readStorage('users', []);
 
@@ -2644,8 +2686,31 @@
       }
       
       const role = document.getElementById('authRole').value;
-      
-      // 创建新用户
+
+      // 在线模式：走服务端注册（服务端查重、哈希入库；律师注册进待审列表）
+      if (window.Sync && !window.Sync.localMode()) {
+        window.Sync.register({ username, password, email: email || '', role: role === 'lawyer' ? 'lawyer' : 'user' }).then((res) => {
+          if (!res.ok) {
+            showAuthError('username', res.error || '注册失败');
+            return;
+          }
+          if (res.pending) {
+            closeAuthModal();
+            alert('律师注册申请已提交，等待管理员审核。审核通过后您将收到通知。');
+            return;
+          }
+          const loginUser = res.user ? { ...res.user, loginAt: Date.now() } : { username, role: 'user', loginAt: Date.now() };
+          setAuth(loginUser);
+          closeAuthModal();
+          showLoginSuccess(loginUser, true);
+          setTimeout(() => {
+            location.hash = '#/';
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          }, 100);
+        });
+        return;
+      }
+      // 创建新用户（离线兜底）
       const newUser = {
         id: nid(),
         username,
@@ -2774,16 +2839,29 @@
         alert('用户名和密码不能为空');
         return;
       }
-      
+
+      // 在线模式：走服务端专用 API（密码哈希入库，不进本地 users）
+      if (window.Sync && !window.Sync.localMode()) {
+        window.Sync.request('/api/users', { method: 'POST', body: { username, password, email, role } }).then((res) => {
+          if (!res.ok) {
+            alert((res.data && res.data.error) || '创建失败');
+            return;
+          }
+          alert('用户创建成功');
+          window.Sync.refreshUsers().then(() => renderAdminUsers());
+        });
+        return;
+      }
+
       const users = readStorage('users', []);
-      
+
       // 检查用户名是否已存在
       if (users.find(u => u.username === username)) {
         alert('用户名已存在');
         return;
       }
-      
-      // 创建新用户
+
+      // 创建新用户（离线兜底）
       const newUser = {
         id: nid(),
         username,
@@ -2792,10 +2870,10 @@
         role: role || 'user',
         createdAt: Date.now()
       };
-      
+
       users.push(newUser);
       writeStorage('users', users);
-      
+
       alert('用户创建成功');
       renderAdminUsers();
     });
@@ -2805,6 +2883,8 @@
     const users = readStorage('users', []);
     const user = users.find(u => u.id === id);
     if (!user) return;
+    // 在线模式：编辑走服务端专用 API；密码字段变为「留空则不重置」
+    const online = !!(window.Sync && !window.Sync.localMode());
     
     setApp(html`
       <div class="admin-page">
@@ -2815,12 +2895,12 @@
         <div class="admin-content">
           <form id="editUserForm" class="admin-form">
             <div class="form-group">
-              <label for="editUsername">用户名 *</label>
-              <input type="text" id="editUsername" name="username" required value="${escapeHtml(user.username)}">
+              <label for="editUsername">用户名${online ? '' : ' *'}</label>
+              <input type="text" id="editUsername" name="username" ${online ? 'readonly' : 'required'} value="${escapeHtml(user.username)}">
             </div>
             <div class="form-group">
-              <label for="editPassword">密码 *</label>
-              <input type="password" id="editPassword" name="password" required value="${escapeHtml(user.password)}">
+              <label for="editPassword">${online ? '重置密码（留空则不修改）' : '密码 *'}</label>
+              <input type="password" id="editPassword" name="password" ${online ? '' : 'required'} value="">
             </div>
             <div class="form-group">
               <label for="editEmail">邮箱</label>
@@ -2852,22 +2932,43 @@
       const email = formData.get('email').trim();
       const role = formData.get('role');
       
+      // 在线模式：PUT 更新 email/role（用户名只读）+ 可选重置密码
+      if (online) {
+        const body = { email: email || user.email || '' };
+        if (role && role !== user.role) body.role = role;
+        window.Sync.request('/api/users/' + encodeURIComponent(id), { method: 'PUT', body }).then((res) => {
+          if (!res.ok) {
+            alert((res.data && res.data.error) || '更新失败');
+            return;
+          }
+          if (!password) {
+            alert('用户信息更新成功');
+            return window.Sync.refreshUsers().then(() => renderAdminUsers());
+          }
+          window.Sync.request('/api/users/' + encodeURIComponent(id) + '/password', { method: 'POST', body: { password } }).then((pRes) => {
+            alert(pRes.ok ? '用户信息更新成功（密码已重置）' : ('用户信息更新成功，但密码重置失败：' + ((pRes.data && pRes.data.error) || '未知错误')));
+            window.Sync.refreshUsers().then(() => renderAdminUsers());
+          });
+        });
+        return;
+      }
+
       if (!username || !password) {
         alert('用户名和密码不能为空');
         return;
       }
-      
+
       // 检查用户名是否已被其他用户使用
       if (username !== user.username && users.find(u => u.username === username)) {
         alert('用户名已存在');
         return;
       }
-      
-      // 更新用户信息
-      const updatedUsers = users.map(u => 
+
+      // 更新用户信息（离线兜底）
+      const updatedUsers = users.map(u =>
         u.id === id ? { ...u, username, password, email, role: role || 'user', updatedAt: Date.now() } : u
       );
-      
+
       writeStorage('users', updatedUsers);
       alert('用户信息更新成功');
       renderAdminUsers();
@@ -2876,10 +2977,23 @@
 
   window.deleteAdminUser = (id) => {
     if (!confirm('确定要删除这个用户吗？删除后无法恢复。')) return;
-    
+
+    // 在线模式：走服务端专用 API
+    if (window.Sync && !window.Sync.localMode()) {
+      window.Sync.request('/api/users/' + encodeURIComponent(id), { method: 'DELETE' }).then((res) => {
+        if (!res.ok) {
+          alert((res.data && res.data.error) || '删除失败');
+          return;
+        }
+        alert('用户删除成功');
+        window.Sync.refreshUsers().then(() => renderAdminUsers());
+      });
+      return;
+    }
+
     const users = readStorage('users', []);
     const updatedUsers = users.filter(u => u.id !== id);
-    
+
     writeStorage('users', updatedUsers);
     alert('用户删除成功');
     renderAdminUsers();
@@ -2977,11 +3091,24 @@
       }
     }
 
-    // 更新用户角色
-    const updatedUsers = users.map(u => 
+    // 在线模式：走服务端角色切换 API
+    if (window.Sync && !window.Sync.localMode()) {
+      window.Sync.request('/api/users/' + encodeURIComponent(id) + '/role', { method: 'POST', body: { role: newRole } }).then((res) => {
+        if (!res.ok) {
+          alert((res.data && res.data.error) || '权限变更失败');
+          return;
+        }
+        alert(`用户权限变更成功！\n${user.username} 已${action}`);
+        window.Sync.refreshUsers().then(() => renderAdminUsers());
+      });
+      return;
+    }
+
+    // 更新用户角色（离线兜底）
+    const updatedUsers = users.map(u =>
       u.id === id ? { ...u, role: newRole, updatedAt: Date.now() } : u
     );
-    
+
     writeStorage('users', updatedUsers);
     alert(`用户权限变更成功！\n${user.username} 已${action}`);
     renderAdminUsers();
@@ -3826,7 +3953,20 @@
   // 审核通过律师申请
   window.approveLawyerApplication = function(applicationId) {
     if (!confirm('确定要通过这个律师申请吗？')) return;
-    
+
+    // 在线模式：走服务端审批 API（同时更新对应用户角色）
+    if (window.Sync && !window.Sync.localMode()) {
+      window.Sync.request('/api/users/lawyer-applications/' + encodeURIComponent(applicationId) + '/approve', { method: 'POST' }).then((res) => {
+        if (!res.ok) {
+          alert((res.data && res.data.error) || '操作失败');
+          return;
+        }
+        alert('律师申请已通过！');
+        window.Sync.refreshUsers().then(() => renderLawyerApplications());
+      });
+      return;
+    }
+
     const applications = readStorage('lawyer_applications', []);
     const users = readStorage('users', []);
     const user = getAuth();
@@ -3856,7 +3996,20 @@
   // 拒绝律师申请
   window.rejectLawyerApplication = function(applicationId) {
     if (!confirm('确定要拒绝这个律师申请吗？')) return;
-    
+
+    // 在线模式：走服务端审批 API（同时更新对应用户角色）
+    if (window.Sync && !window.Sync.localMode()) {
+      window.Sync.request('/api/users/lawyer-applications/' + encodeURIComponent(applicationId) + '/reject', { method: 'POST' }).then((res) => {
+        if (!res.ok) {
+          alert((res.data && res.data.error) || '操作失败');
+          return;
+        }
+        alert('律师申请已拒绝！');
+        window.Sync.refreshUsers().then(() => renderLawyerApplications());
+      });
+      return;
+    }
+
     const applications = readStorage('lawyer_applications', []);
     const users = readStorage('users', []);
     const user = getAuth();
@@ -7180,6 +7333,54 @@
     };
     const getPostAuthor = (p) => p.author || `网友${String(p.id || '').slice(-4) || '用户'}`;
 
+    // 封面兜底：loremflickr 加载失败时回退到本地生成的 SVG 横幅（带帖子标题）
+    const getForumFallbackSvg = (p) => {
+      const safeTitle = String(p.title || '法律论坛').slice(0, 26);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#242b3e" />
+              <stop offset="100%" stop-color="#171c2a" />
+            </linearGradient>
+            <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#c8b06a" />
+              <stop offset="100%" stop-color="#e8b64c" />
+            </linearGradient>
+          </defs>
+          <rect width="640" height="300" fill="url(#bg)" />
+          <g opacity="0.1" stroke="#ffffff">
+            <path d="M0 60 H640 M0 120 H640 M0 180 H640 M0 240 H640" />
+            <path d="M128 0 V300 M256 0 V300 M384 0 V300 M512 0 V300" />
+          </g>
+          <circle cx="88" cy="150" r="46" fill="url(#acc)" opacity="0.92" />
+          <text x="88" y="165" text-anchor="middle" fill="#ffffff" font-size="34" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">💬</text>
+          <text x="156" y="158" fill="#ffffff" font-size="25" font-weight="700" font-family="Segoe UI, Microsoft YaHei, sans-serif">${safeTitle}</text>
+          <text x="156" y="192" fill="#cfd6e4" font-size="15" font-family="Segoe UI, Microsoft YaHei, sans-serif">法律论坛 · 理性讨论 · 友善交流</text>
+        </svg>
+      `.trim();
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    };
+
+    // 浏览量：同一会话内每帖只计一次，避免搜索/筛选/排序重绘时反复自增
+    const forumViewed = new Set(JSON.parse(sessionStorage.getItem('kh_forum_viewed') || '[]'));
+    const markViewed = (id) => {
+      if (forumViewed.has(id)) return;
+      forumViewed.add(id);
+      sessionStorage.setItem('kh_forum_viewed', JSON.stringify([...forumViewed]));
+      const items = readStorage(STORAGE_KEYS.forum, []);
+      const idx = items.findIndex(x => x.id === id);
+      if (idx >= 0) { items[idx].views = (items[idx].views || 0) + 1; writeStorage(STORAGE_KEYS.forum, items); }
+    };
+
+    // 当前登录者已赞过的回复集合（点赞去重 / 可取消赞）
+    const authForForum = getAuth();
+    const whoLikes = (authForForum && authForForum.username) || '匿名用户';
+    const myLikes = new Set(JSON.parse(localStorage.getItem(`kh_forum_likes_${whoLikes}`) || '[]'));
+
+    // 展开全部回复的状态（跨重绘保留）
+    window.forumExpanded = window.forumExpanded || new Set();
+
     const renderForumList = (keyword = '', filter = 'all', sort = 'date') => {
       let filtered = all.filter(p => {
         const matchesKeyword = !keyword || 
@@ -7207,19 +7408,24 @@
       }
 
       return filtered.map(p => {
+        markViewed(p.id);
         const me = getAuth();
         const isAdmin = !!(me && (me.role === 'admin' || me.role === 'superadmin'));
         const postAuthor = getPostAuthor(p);
         const canManage = isAdmin || (me && postAuthor === me.username);
+        const isEditing = window.forumEditId === p.id;
+        const repliesAll = p.replies || [];
+        const repliesOpen = !!(window.forumExpanded && window.forumExpanded.has(p.id));
+        const shownReplies = repliesOpen ? repliesAll : repliesAll.slice(-3);
         return html`
         <div class="forum-post">
           <div class="forum-post-media">
-            <img class="forum-post-img" src="${getForumCover(p)}" alt="${escapeHtml(p.title)}" loading="lazy">
+            <img class="forum-post-img" src="${getForumCover(p)}" data-fallback="${getForumFallbackSvg(p)}" alt="${escapeHtml(p.title)}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback;">
           </div>
           <div class="forum-post-header">
             <div class="forum-post-title">${escapeHtml(p.title)}</div>
             <div class="forum-post-actions">
-              ${canManage ? html`
+              ${canManage && !isEditing ? html`
                 <button class="btn secondary small" onclick="editPost('${p.id}')">编辑</button>
                 <button class="btn danger small" onclick="deletePost('${p.id}')">删除</button>
               ` : ''}
@@ -7230,7 +7436,18 @@
             <span class="forum-author-name">${escapeHtml(getPostAuthor(p))}</span>
             <span>发表于 ${new Date(p.createdAt).toLocaleString()}</span>
           </div>
-          <div class="forum-post-content">${escapeHtml(p.content)}</div>
+          ${isEditing ? html`
+            <form class="forum-new-post-form" onsubmit="return savePostEdit('${p.id}', this)">
+              <label>帖子标题</label>
+              <input name="title" value="${escapeHtml(p.title)}" required>
+              <label>帖子内容</label>
+              <textarea name="content" required>${escapeHtml(p.content)}</textarea>
+              <div class="form-actions">
+                <button class="btn secondary" type="button" onclick="cancelPostEdit()">取消</button>
+                <button class="btn primary" type="submit">保存修改</button>
+              </div>
+            </form>
+          ` : html`<div class="forum-post-content">${escapeHtml(p.content)}</div>`}
           <div class="forum-post-footer">
             <div class="forum-post-stats">
               <span>💬 ${(p.replies||[]).length} 条回复</span>
@@ -7238,19 +7455,19 @@
               <span>👍 ${p.likes || 0} 个赞</span>
           </div>
             <div class="forum-replies">
-              ${(p.replies||[]).slice(-3).map(r => html`
+              ${shownReplies.map(r => html`
                 <div class="forum-reply">
                   <div class="forum-reply-content">${escapeHtml(r.text||r.content)}</div>
                   <div class="forum-reply-meta">
                     <span class="forum-reply-author">${escapeHtml(r.author || '热心网友')}</span>
                     <span>${new Date(r.createdAt).toLocaleString()}</span>
                     <div class="forum-reply-actions">
-                      <button class="btn secondary small" onclick="likeReply('${p.id}', '${r.id}')">👍</button>
+                      <button class="btn secondary small${myLikes.has(p.id + '::' + r.id) ? ' liked' : ''}" onclick="likeReply('${p.id}', '${r.id}')" title="${myLikes.has(p.id + '::' + r.id) ? '取消赞' : '点赞'}">👍 ${r.likes || 0}</button>
                     </div>
                   </div>
                 </div>
               `).join('')}
-              ${(p.replies||[]).length > 3 ? html`<div class="small">还有 ${(p.replies||[]).length - 3} 条回复...</div>` : ''}
+              ${repliesAll.length > 3 ? html`<button class="btn secondary small forum-reply-expand" onclick="expandReplies('${p.id}')">${repliesOpen ? '收起回复' : '展开全部 ' + repliesAll.length + ' 条回复'}</button>` : ''}
             </div>
             <form class="forum-reply-form" data-id="${p.id}">
               <label>回复</label>
@@ -7388,26 +7605,29 @@
       renderForum();
     });
 
-    // 回复功能
-    document.addEventListener('submit', (e) => {
-      if (e.target.classList.contains('forum-reply-form')) {
-        e.preventDefault();
-        const id = e.target.dataset.id;
-        const text = new FormData(e.target).get('reply');
-        if (!text) return;
-        const items = readStorage(STORAGE_KEYS.forum, []);
-        const idx = items.findIndex(x => x.id === id);
-        if (idx >= 0) {
-          const user = getAuth();
-          items[idx].replies = [...(items[idx].replies||[]), { id: nid(), text, createdAt: Date.now(), author: user ? user.username : '匿名用户' }];
-          writeStorage(STORAGE_KEYS.forum, items);
-          renderForum();
+    // 回复功能：只在首次渲染时注册 document 级监听（否则每次 renderForum 都会重复挂载，导致一条回复被追加 N 次）
+    if (!window.__forumReplyBound) {
+      window.__forumReplyBound = true;
+      document.addEventListener('submit', (e) => {
+        if (e.target.classList.contains('forum-reply-form')) {
+          e.preventDefault();
+          const id = e.target.dataset.id;
+          const text = new FormData(e.target).get('reply');
+          if (!text) return;
+          const items = readStorage(STORAGE_KEYS.forum, []);
+          const idx = items.findIndex(x => x.id === id);
+          if (idx >= 0) {
+            const user = getAuth();
+            items[idx].replies = [...(items[idx].replies||[]), { id: nid(), text, createdAt: Date.now(), author: user ? user.username : '匿名用户' }];
+            writeStorage(STORAGE_KEYS.forum, items);
+            renderForum();
+          }
+          e.target.reset();
         }
-        e.target.reset();
-      }
-    });
+      });
+    }
 
-    // 全局函数：编辑帖子
+    // 全局函数：进入编辑（内联表单）
     window.editPost = (id) => {
       const posts = readStorage(STORAGE_KEYS.forum, []);
       const post = posts.find(x => x.id === id);
@@ -7421,13 +7641,27 @@
         return;
       }
 
-      const title = prompt('帖子标题', post.title);
-      if (title === null) return;
-      const content = prompt('帖子内容', post.content);
-      if (content === null) return;
-      
+      window.forumEditId = id;
+      renderForum();
+    };
+
+    // 全局函数：保存编辑
+    window.savePostEdit = (id, form) => {
+      const fd = new FormData(form);
+      const title = fd.get('title');
+      const content = fd.get('content');
+      if (!title || !content) return false;
+      const posts = readStorage(STORAGE_KEYS.forum, []);
       const updated = posts.map(x => x.id === id ? { ...x, title, content, updatedAt: Date.now() } : x);
       writeStorage(STORAGE_KEYS.forum, updated);
+      window.forumEditId = null;
+      renderForum();
+      return false;
+    };
+
+    // 全局函数：取消编辑
+    window.cancelPostEdit = () => {
+      window.forumEditId = null;
       renderForum();
     };
 
@@ -7451,17 +7685,38 @@
       renderForum();
     };
 
-    // 全局函数：点赞回复
+    // 全局函数：点赞 / 取消赞回复（按账号去重）
     window.likeReply = (postId, replyId) => {
       const posts = readStorage(STORAGE_KEYS.forum, []);
       const post = posts.find(x => x.id === postId);
       if (!post) return;
-      
+
       const reply = post.replies.find(r => r.id === replyId);
       if (!reply) return;
-      
-      reply.likes = (reply.likes || 0) + 1;
+
+      const me = getAuth();
+      const who = (me && me.username) || '匿名用户';
+      const token = postId + '::' + replyId;
+      const key = 'kh_forum_likes_' + who;
+      const liked = JSON.parse(localStorage.getItem(key) || '[]');
+      const idx = liked.indexOf(token);
+      if (idx >= 0) {
+        liked.splice(idx, 1);
+        reply.likes = Math.max(0, (reply.likes || 0) - 1);
+      } else {
+        liked.push(token);
+        reply.likes = (reply.likes || 0) + 1;
+      }
+      localStorage.setItem(key, JSON.stringify(liked));
       writeStorage(STORAGE_KEYS.forum, posts);
+      renderForum();
+    };
+
+    // 全局函数：展开 / 收起全部回复
+    window.expandReplies = (id) => {
+      if (!window.forumExpanded) window.forumExpanded = new Set();
+      if (window.forumExpanded.has(id)) window.forumExpanded.delete(id);
+      else window.forumExpanded.add(id);
       renderForum();
     };
 
@@ -9178,9 +9433,25 @@
       }
     };
     
-    // 更新当前用户信息
+    // 在线模式：资料保存到服务端，并写回当前会话
+    if (window.Sync && !window.Sync.localMode()) {
+      const email = formData.get('email') || user.email || '';
+      window.Sync.request('/api/users/' + encodeURIComponent(user.id) + '/profile', { method: 'POST', body: { profile: user.profile, email } }).then((res) => {
+        if (!res.ok) {
+          alert((res.data && res.data.error) || '保存失败');
+          return;
+        }
+        user.email = email;
+        setAuth(user);
+        alert('个人资料保存成功！');
+        renderProfile();
+      });
+      return;
+    }
+
+    // 更新当前用户信息（离线兜底）
     setAuth(user);
-    
+
     // 同步更新users存储中的用户数据
     const users = readStorage('users', []);
     const userIndex = users.findIndex(u => u.id === user.id);
@@ -9255,32 +9526,53 @@
     const currentPassword = formData.get('currentPassword');
     const newPassword = formData.get('newPassword');
     const confirmPassword = formData.get('confirmPassword');
-    
-    // 验证当前密码（对于演示账号，使用默认密码）
+
+    // 在线模式：服务端校验当前密码 + 改密（成功后服务端吊销全部会话，前端登出）
+    if (window.Sync && !window.Sync.localMode()) {
+      if (newPassword !== confirmPassword) {
+        alert('两次输入的新密码不一致');
+        return;
+      }
+      if (newPassword.length < 6) {
+        alert('新密码长度至少6位');
+        return;
+      }
+      window.Sync.changePassword(currentPassword, newPassword).then((res) => {
+        if (!res.ok) {
+          alert(res.error || '密码修改失败');
+          return;
+        }
+        alert('密码修改成功！');
+        renderLogout();
+      });
+      return;
+    }
+
+    // 验证当前密码（离线兜底；对于演示账号，使用默认密码）
     const defaultPasswords = {
       'admin': 'admin123',
       'lawyer': '123456',
       'user': '123456'
     };
-    
+
     const expectedPassword = user.password || defaultPasswords[user.username];
     if (currentPassword !== expectedPassword) {
       alert('当前密码不正确');
       return;
     }
-    
+
     // 验证新密码
     if (newPassword !== confirmPassword) {
       alert('两次输入的新密码不一致');
       return;
     }
-    
+
     if (newPassword.length < 6) {
       alert('新密码长度至少6位');
       return;
     }
-    
-    // 更新密码
+
+    // 更新密码（离线兜底）
     user.password = newPassword;
     setAuth(user);
     
@@ -9873,6 +10165,7 @@
   window.KH = window.KH || {};
   window.KH.logout = function () {
     if (window.KH.closeSettings) window.KH.closeSettings();
+    if (window.Sync) window.Sync.logout(); // 在线模式吊销服务端会话
     setAuth(null);
     location.hash = '#/';
   };
