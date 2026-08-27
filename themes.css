@@ -1034,14 +1034,17 @@
 :root:not([data-theme="original"]) .urgency-badge.high { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
 :root:not([data-theme="original"]) .urgency-badge.medium { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
 
-/* 聊天气泡 */
-:root:not([data-theme="original"]) .message.sent,
-:root:not([data-theme="original"]) .message-item.own {
+/* 聊天气泡
+   ⚠️ 背景必须落在气泡本身（.message-text / .message-content），不能设在整行
+   （.message-item / .message），否则 flex 行会被渐变/底色整块铺满（气泡外包一层色块）。 */
+:root:not([data-theme="original"]) .message.sent .message-content,
+:root:not([data-theme="original"]) .message-item.own .message-text {
   background: var(--c-msg-own-grad);
   color: #fff;
+  border: none;
 }
-:root:not([data-theme="original"]) .message.received,
-:root:not([data-theme="original"]) .message-item.other {
+:root:not([data-theme="original"]) .message.received .message-content,
+:root:not([data-theme="original"]) .message-item.other .message-text {
   background: var(--c-card);
   border: 1px solid var(--c-border-soft);
   color: var(--c-text);
@@ -1485,4 +1488,13 @@ html[data-font="xl"] body { overflow-x: hidden; }
    红白亮色下顶部那条黑色内阴影带会显得突兀，调浅。 */
 :root[data-theme="red-white"] .site-footer {
   box-shadow: inset 0 8px 24px rgba(60, 30, 30, 0.05) !important;
+}
+
+/* ── 聊天气泡：撤回消息置灰（旧界面 .message.recalled，覆盖气泡背景规则）── */
+:root:not([data-theme="original"]) .message.recalled .message-content {
+  background: var(--border-soft, rgba(128, 128, 128, 0.2)) !important;
+  color: var(--c-muted, var(--muted)) !important;
+  font-style: italic;
+  border: none !important;
+  box-shadow: none !important;
 }

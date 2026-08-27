@@ -102,11 +102,19 @@
       getSessions: () => getList(CHAT_KEYS.sessions),
       setSessions: (sessions) => setList(CHAT_KEYS.sessions, sessions),
       getSessionMessages: (sessionId) => getList(CHAT_KEYS.messages).filter(m => m.sessionId === sessionId).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)),
+      getAllMessages: () => getList(CHAT_KEYS.messages),
+      saveMessages: (messages) => setList(CHAT_KEYS.messages, messages),
       addMessage: (message) => {
         const messages = getList(CHAT_KEYS.messages);
         messages.push({ ...message, createdAt: message.createdAt || Date.now() });
         setList(CHAT_KEYS.messages, messages);
       },
+      // 「删除消息（仅自己视图隐藏）」用的本地隐藏键，不走服务端同步
+      getHiddenMessageIds: (userId) => {
+        const list = getList('kh_msg_hidden_' + userId);
+        return Array.isArray(list) ? list : [];
+      },
+      setHiddenMessageIds: (userId, ids) => setList('kh_msg_hidden_' + userId, ids),
       getOrCreateSession: (userId1, userId2, userName1, userName2) => {
         const sessions = getList(CHAT_KEYS.sessions);
         let session = sessions.find(s =>
@@ -117,7 +125,8 @@
           session = {
             id: 'session_' + Math.random().toString(36).slice(2) + Date.now().toString(36),
             userId1, userId2, userName1, userName2,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            lastReadAt: 0 // 上次打开会话读到的最新消息时间（用于未读计数）
           };
           sessions.push(session);
           setList(CHAT_KEYS.sessions, sessions);
@@ -618,10 +627,14 @@
       if (messagesLink) {
         messagesLink.style.display = 'inline-block';
       }
+      // 登录后去掉外层 <a href="#/login"> 的链接行为：否则点击下拉里的按钮/菜单项
+      // 会冒泡触发 #/login 跳转（设置面板刚打开就被 hashchange 关闭、页面跳走）
+      link.removeAttribute('href');
     } else {
       // 顶部不显示“小登录按钮”，登录入口保留在首页主区域
       link.innerHTML = '';
       link.style.display = 'none';
+      link.setAttribute('href', '#/login'); // 恢复登录跳转
       if (adminLink) adminLink.style.display = 'none';
       const lawyerPortalLink = document.getElementById('lawyerPortalLink');
       if (lawyerPortalLink) lawyerPortalLink.style.display = 'none';
@@ -1171,10 +1184,38 @@
   }
 
   function renderLogout() {
+    // 退出确认页：显示当前账号，用户点「确认退出」才真正执行退出
+    const user = getAuth();
+    if (!user || !user.username) { location.hash = '#/'; return; }
+    setApp(html`
+      <section class="section">
+        <div class="logout-page">
+          <div class="logout-header">
+            <button class="btn secondary" onclick="location.hash = '#/'">← 返回首页</button>
+            <h1>退出登录</h1>
+          </div>
+          <div class="logout-card">
+            <div class="logout-avatar">${escapeHtml(user.username.charAt(0).toUpperCase())}</div>
+            <h2>${escapeHtml(user.username)}</h2>
+            <p class="logout-role">${getRoleDisplayName(user.role)}</p>
+            <p class="logout-desc">确定要退出当前账号吗？退出后将回到未登录状态，使用 AI 咨询、私信、律师端等功能时需要重新登录。</p>
+            <div class="logout-actions">
+              <button class="btn danger" onclick="window.confirmLogout()">🚪 确认退出登录</button>
+              <button class="btn secondary" onclick="location.hash = '#/'">取消</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    `);
+  }
+
+  // 真正执行退出：吊销服务端会话 → 清除本地登录态 → 回首页
+  window.confirmLogout = function (silent) {
     if (window.Sync) window.Sync.logout(); // 在线模式吊销服务端会话（失败静默）
     setAuth(null);
+    if (!silent) alert('已退出登录');
     location.hash = '#/';
-  }
+  };
 
   // --- 登录注册模态框功能 ---
   function showAuthModal(mode = 'login') {
@@ -4887,38 +4928,48 @@
   window.handleFriendRequest = function(friendRequestId, action) {
     const friends = window.chatStorage.getFriends();
     const friendRequest = friends.find(f => f.id === friendRequestId);
-    
+
     if (!friendRequest) return;
-    
+
+    const authUser = getAuth();
+
     if (action === 'accept') {
       friendRequest.status = 'accepted';
       friendRequest.acceptedAt = Date.now();
-      
+
       // 发送通知给用户
       const notification = {
         id: window.chatStorage.generateId(),
         type: 'friend_accepted',
-        fromUserId: getAuth().id,
-        fromUserName: getAuth().username,
+        fromUserId: authUser.id,
+        fromUserName: authUser.username,
         toUserId: friendRequest.userId,
         toUserName: friendRequest.userName,
         title: '好友申请已通过',
-        content: `${getAuth().username} 已通过您的好友申请`,
+        content: `${authUser.username} 已通过您的好友申请`,
         createdAt: Date.now(),
         read: false
       };
-      
+
       window.chatStorage.addNotification(notification);
-      
+
       alert('已通过好友申请');
     } else if (action === 'reject') {
       friendRequest.status = 'rejected';
-      
+
       alert('已拒绝好友申请');
     }
-    
+
     window.chatStorage.setFriends(friends);
-    renderFriendRequests();
+
+    // 把对应的 friend_request 通知标记已读，避免通知中心残留
+    const notifications = window.chatStorage.getNotifications();
+    const reqNotice = notifications.find(n => n.data && n.data.friendRequestId === friendRequestId);
+    if (reqNotice) window.chatStorage.markNotificationRead(reqNotice.id);
+
+    // 按当前所在页面刷新：交流中心里直接处理则留在消息页
+    if (location.hash.startsWith('#/messages')) renderMessages();
+    else renderFriendRequests();
   };
 
   // 渲染私信页面 - 新设计：左边好友列表，右边聊天内容
@@ -4929,7 +4980,11 @@
     const friends = window.chatStorage.getFriends();
     const sessions = window.chatStorage.getSessions();
     const notifications = window.chatStorage.getNotifications();
-    
+    const hidden = new Set(window.chatStorage.getHiddenMessageIds(user.id));
+    // 记住当前打开的会话与输入框内容，供重渲后恢复（轮询触发重渲时不打断聊天）
+    const prevSessionId = window.currentSessionId;
+    const prevChatInput = (prevSessionId && document.getElementById('chatInput')) ? document.getElementById('chatInput').value : '';
+
     // 根据用户角色显示不同的内容
     let myFriends, unreadNotifications;
     
@@ -4943,10 +4998,19 @@
       unreadNotifications = notifications.filter(n => n.toUserId === user.id && !n.read);
     }
     
-    // 获取聊天会话列表
-    const userSessions = sessions.filter(s => 
-      s.userId1 === user.id || s.userId2 === user.id
-    ).sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+    // 获取聊天会话列表（实时派生 lastMessageAt / unreadCount，兼容旧数据无字段）
+    const allMsgs = window.chatStorage.getAllMessages().filter(m => !hidden.has(m.id));
+    const userSessions = sessions
+      .filter(s => s.userId1 === user.id || s.userId2 === user.id)
+      .map(s => {
+        const msgs = allMsgs.filter(m => m.sessionId === s.id);
+        const last = msgs[msgs.length - 1];
+        return Object.assign({}, s, {
+          lastMessageAt: last ? last.createdAt : (s.createdAt || 0),
+          unreadCount: msgs.filter(m => m.senderId !== user.id && (m.createdAt || 0) > (s.lastReadAt || 0)).length
+        });
+      })
+      .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
     
     setApp(html`
       <div class="messages-container-new">
@@ -4996,10 +5060,10 @@
                       { id: session.userId2, name: session.userName2 } : 
                       { id: session.userId1, name: session.userName1 };
                     
-                    // 获取最后一条消息
-                    const messages = window.chatStorage.getSessionMessages(session.id);
+                    // 获取最后一条消息（过滤本人已删除的消息）
+                    const messages = window.chatStorage.getSessionMessages(session.id).filter(m => !hidden.has(m.id));
                     const lastMessage = messages[messages.length - 1];
-                    
+
                     return html`
                       <div class="chat-item-new" onclick="openChatWindow('${session.id}', '${otherUser.name}')" data-session-id="${session.id}">
                         <div class="chat-avatar-new">
@@ -5008,7 +5072,7 @@
                         </div>
                         <div class="chat-info-new">
                           <div class="chat-name-new">${escapeHtml(otherUser.name)}</div>
-                          <div class="chat-preview-new">${lastMessage ? escapeHtml(lastMessage.content.length > 30 ? lastMessage.content.substring(0, 30) + '...' : lastMessage.content) : '暂无消息'}</div>
+                          <div class="chat-preview-new">${lastMessage ? (lastMessage.recalled ? '撤回了一条消息' : escapeHtml(lastMessage.content.length > 30 ? lastMessage.content.substring(0, 30) + '...' : lastMessage.content)) : '暂无消息'}</div>
                         </div>
                         <div class="chat-meta-new">
                           <div class="chat-time-new">${lastMessage ? new Date(lastMessage.createdAt).toLocaleTimeString() : ''}</div>
@@ -5055,9 +5119,9 @@
             <!-- 通知中心 -->
             <div id="notificationsTabNew" class="tab-content">
               <div class="notifications-list-new">
-                ${notifications.length === 0 ? 
+                ${notifications.length === 0 ?
                   '<div class="empty-state"><div class="empty-icon">🔔</div><p>暂无通知</p></div>' :
-                  notifications.map(notification => html`
+                  notifications.filter(n => n.toUserId === user.id).map(notification => html`
                     <div class="notification-item-new ${notification.read ? 'read' : 'unread'}" onclick="handleNotificationClick('${notification.id}')">
                       <div class="notification-icon-new">${notification.type === 'friend_request' ? '👥' : notification.type === 'friend_accepted' ? '✅' : '💬'}</div>
                       <div class="notification-content-new">
@@ -5066,6 +5130,10 @@
                         <div class="notification-time-new">${new Date(notification.createdAt).toLocaleString()}</div>
                       </div>
                       <div class="notification-actions-new">
+                        ${notification.type === 'friend_request' && notification.data && notification.data.friendRequestId ? `
+                          <button class="btn success small" onclick="event.stopPropagation(); handleFriendRequest('${notification.data.friendRequestId}', 'accept')">通过</button>
+                          <button class="btn danger small" onclick="event.stopPropagation(); handleFriendRequest('${notification.data.friendRequestId}', 'reject')">拒绝</button>
+                        ` : ''}
                         ${!notification.read ? '<div class="unread-dot"></div>' : ''}
                       </div>
                     </div>
@@ -5127,6 +5195,17 @@
         </div>
       </div>
     `);
+
+    // 若此前打开了会话，重渲后恢复聊天窗口 + 输入内容（轮询/同步触发的重渲不打断聊天）
+    if (prevSessionId) {
+      const session = sessions.find(s => s.id === prevSessionId);
+      if (session) {
+        const otherName = session.userId1 === user.id ? session.userName2 : session.userName1;
+        openChatWindow(prevSessionId, otherName);
+        const input = document.getElementById('chatInput');
+        if (input && prevChatInput) input.value = prevChatInput;
+      }
+    }
   }
 
   // 切换私信标签页
@@ -5166,7 +5245,19 @@
     
     // 加载聊天消息
     loadChatMessages(sessionId);
-    
+
+    // 记录已读时间线（未读角标依赖 lastReadAt）
+    const sessMsgs = window.chatStorage.getSessionMessages(sessionId);
+    const lastMsg = sessMsgs[sessMsgs.length - 1];
+    if (lastMsg) {
+      const sessions = window.chatStorage.getSessions();
+      const s = sessions.find(x => x.id === sessionId);
+      if (s) {
+        s.lastReadAt = lastMsg.createdAt;
+        window.chatStorage.setSessions(sessions);
+      }
+    }
+
     // 设置当前会话ID
     window.currentSessionId = sessionId;
     
@@ -5207,17 +5298,28 @@
     const user = getAuth();
     if (!user) return;
     const messages = window.chatStorage.getSessionMessages(sessionId);
+    const hidden = new Set(window.chatStorage.getHiddenMessageIds(user.id));
 
-    messagesContainer.innerHTML = messages.map(message => {
+    messagesContainer.innerHTML = messages.filter(m => !hidden.has(m.id)).map(message => {
       const isOwn = message.senderId === user.id;
+      const recalled = !!message.recalled;
+      const canRecall = isOwn && !recalled && (Date.now() - (message.createdAt || 0)) <= 2 * 60 * 1000;
+      const text = recalled
+        ? (isOwn ? '你撤回了一条消息' : '对方撤回了一条消息')
+        : escapeHtml(message.content);
       return `
-        <div class="message-item ${isOwn ? 'own' : 'other'}">
+        <div class="message-item ${isOwn ? 'own' : 'other'} ${recalled ? 'recalled' : ''}">
           <div class="message-avatar">
             <div class="avatar-circle">${escapeHtml(message.senderName.charAt(0).toUpperCase())}</div>
           </div>
           <div class="message-content">
-            <div class="message-text">${escapeHtml(message.content)}</div>
+            ${isOwn ? '' : `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>`}
+            <div class="message-text">${text}</div>
             <div class="message-time">${new Date(message.createdAt).toLocaleTimeString()}</div>
+            <div class="message-actions">
+              ${canRecall ? `<button class="btn-icon" onclick="recallMessage('${message.id}')" title="撤回"><span>↩️</span></button>` : ''}
+              <button class="btn-icon" onclick="deleteMessageForMe('${message.id}')" title="删除"><span>🗑️</span></button>
+            </div>
           </div>
         </div>
       `;
@@ -5278,6 +5380,43 @@
     };
     
     window.chatStorage.addNotification(notification);
+  };
+
+  // 撤回消息（发送后 2 分钟内，双方都变「已撤回」）
+  window.recallMessage = function(messageId) {
+    const user = getAuth();
+    if (!user) return;
+    const messages = window.chatStorage.getAllMessages();
+    const msg = messages.find(m => m.id === messageId);
+    if (!msg) return;
+    if (msg.senderId !== user.id) {
+      alert('只能撤回自己发送的消息');
+      return;
+    }
+    if (Date.now() - (msg.createdAt || 0) > 2 * 60 * 1000) {
+      alert('发送超过 2 分钟的消息不能撤回');
+      return;
+    }
+    if (msg.recalled) return;
+    msg.recalled = true;
+    msg.recalledAt = Date.now();
+    window.chatStorage.saveMessages(messages);
+
+    // 刷新当前会话气泡
+    if (window.currentSessionId) loadChatMessages(window.currentSessionId);
+    else if (location.hash.startsWith('#/messages')) renderMessages();
+  };
+
+  // 删除消息（仅自己视图移除，对方不受影响）
+  window.deleteMessageForMe = function(messageId) {
+    const user = getAuth();
+    if (!user) return;
+    const hidden = window.chatStorage.getHiddenMessageIds(user.id);
+    if (hidden.indexOf(messageId) === -1) hidden.push(messageId);
+    window.chatStorage.setHiddenMessageIds(user.id, hidden);
+
+    if (window.currentSessionId) loadChatMessages(window.currentSessionId);
+    else if (location.hash.startsWith('#/messages')) renderMessages();
   };
 
   // 处理聊天输入框按键事件
@@ -5668,10 +5807,11 @@
     if (!session) return;
     
     const messages = window.chatStorage.getSessionMessages(sessionId);
-    const otherUser = session.userId1 === user.id ? 
-      { id: session.userId2, name: session.userName2 } : 
+    const otherUser = session.userId1 === user.id ?
+      { id: session.userId2, name: session.userName2 } :
       { id: session.userId1, name: session.userName1 };
-    
+    const hidden = new Set(window.chatStorage.getHiddenMessageIds(user.id));
+
     setApp(html`
       <div class="chat-container">
         <div class="chat-header">
@@ -5680,14 +5820,26 @@
         </div>
 
         <div class="chat-messages" id="chatMessages">
-          ${messages.map(message => html`
-            <div class="message ${message.senderId === user.id ? 'sent' : 'received'}">
-              <div class="message-content">
-                <div class="message-text">${escapeHtml(message.content)}</div>
-                <div class="message-time">${new Date(message.createdAt).toLocaleTimeString()}</div>
+          ${messages.filter(m => !hidden.has(m.id)).map(message => {
+            const isOwn = message.senderId === user.id;
+            const recalled = !!message.recalled;
+            const canRecall = isOwn && !recalled && (Date.now() - (message.createdAt || 0)) <= 2 * 60 * 1000;
+            const text = recalled
+              ? (isOwn ? '你撤回了一条消息' : '对方撤回了一条消息')
+              : escapeHtml(message.content);
+            return html`
+              <div class="message ${isOwn ? 'sent' : 'received'} ${recalled ? 'recalled' : ''}">
+                <div class="message-content">
+                  <div class="message-text">${text}</div>
+                  <div class="message-time">${new Date(message.createdAt).toLocaleTimeString()}</div>
+                  <div class="message-actions">
+                    ${canRecall ? `<button class="btn-icon" onclick="recallMessage('${message.id}')" title="撤回"><span>↩️</span></button>` : ''}
+                    <button class="btn-icon" onclick="deleteMessageForMe('${message.id}')" title="删除"><span>🗑️</span></button>
+                  </div>
+                </div>
               </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
         
         <div class="chat-input">
@@ -9543,7 +9695,7 @@
           return;
         }
         alert('密码修改成功！');
-        renderLogout();
+        window.confirmLogout(true); // 改密码成功直接退出，跳过确认页
       });
       return;
     }
@@ -10161,13 +10313,11 @@
     }
   };
 
-  // 退出登录（设置面板调用；同时关闭设置面板回到首页）
+  // 退出登录（设置面板调用）：关闭设置面板后进入退出确认页
   window.KH = window.KH || {};
   window.KH.logout = function () {
     if (window.KH.closeSettings) window.KH.closeSettings();
-    if (window.Sync) window.Sync.logout(); // 在线模式吊销服务端会话
-    setAuth(null);
-    location.hash = '#/';
+    location.hash = '#/logout';
   };
 
 })(); 

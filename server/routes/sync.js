@@ -36,6 +36,19 @@ module.exports = function (db) {
     res.json({ keys, ai, serverTime: Date.now() });
   });
 
+  // GET /api/poll?keys=a,b,c —— 轻量轮询：只返回指定托管键 + 每键 updatedAt
+  //（比 bootstrap 轻量：不拉全量键 / users / ai_history）
+  router.get('/poll', authMiddleware(db, {}), (req, res) => {
+    const requested = String(req.query.keys || '').split(',').filter(Boolean);
+    const keys = {};
+    for (const k of requested) {
+      if (!SERVER_KEYS.includes(k)) continue;
+      const row = db.prepare('SELECT data, updated_at FROM kv_rows WHERE key = ?').get(k);
+      if (row) keys[k] = { data: JSON.parse(row.data), updatedAt: row.updated_at };
+    }
+    res.json({ keys, serverTime: Date.now() });
+  });
+
   // POST /api/sync
   router.post('/sync', authMiddleware(db, {}), (req, res) => {
     const { keys } = req.body || {};

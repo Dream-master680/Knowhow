@@ -37,6 +37,10 @@
   const MTIME_KEY = 'kh_sync_mtime';
   const AUTH_KEY = 'ln_auth_v1';
   const SYNC_DEBOUNCE = 1500;
+  // 消息实时轮询：仅拉聊天相关键（比 bootstrap 全量轻量）
+  const POLL_KEYS = ['chat_messages', 'chat_sessions', 'user_friends', 'user_notifications'];
+  const POLL_INTERVAL = 5000;
+  let pollTimer = null;
 
   function isSyncable(key) {
     return SERVER_KEYS.indexOf(key) !== -1 || AI_KEY_RE.test(key);
@@ -216,6 +220,37 @@
     return changed;
   }
 
+  // ── 轻量轮询（消息实时同步）────────────────────
+  function startPolling() {
+    if (mode !== 'online' || pollTimer) return;
+    pollTimer = setInterval(poll, POLL_INTERVAL);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  async function poll() {
+    if (mode !== 'online' || document.hidden) return;       // 离线/后台标签页跳过
+    if (!location.hash.startsWith('#/messages')) return;    // 只在交流中心页轮询
+    const res = await api('/api/poll?keys=' + POLL_KEYS.join(','), { authed: false });
+    if (!res.ok || !res.data || !res.data.keys) return;
+    let changed = false;
+    for (const [k, v] of Object.entries(res.data.keys)) {
+      if (!isServerKey(k)) continue;
+      if (dirty.has(k)) continue;                    // 本端有未推送写入，不覆盖（防丢新写）
+      const serverAt = Number(v.updatedAt) || 0;
+      if (serverAt >= (mtime[k] || 0)) {             // LWW：服务端不旧于本地才覆盖
+        cache[k] = v.data;
+        writeRaw(k, v.data);
+        mtime[k] = serverAt;
+        changed = true;
+      }
+    }
+    if (changed) {
+      try { window.dispatchEvent(new CustomEvent('kh:datasync')); } catch (e) { /* ignore */ }
+    }
+  }
+
   function enterLocalMode() {
     mode = 'local';
     // 服务器不可达：降级纯本地。通知 app.js 补播被跳过的服务端键
@@ -279,7 +314,10 @@
   // ── 初始化 ──────────────────────────────────
   function init() {
     loadMeta();
-    if (mode === 'online') bootstrap();
+    if (mode === 'online') {
+      bootstrap();
+      startPolling();
+    }
   }
 
   // 页面关闭前尽力推送（不阻塞、不清 dirty——下次加载会再推）
@@ -316,7 +354,10 @@
     changePassword: changePassword,
     // 维护
     refreshUsers: refreshUsers,
-    bootstrap: bootstrap
+    bootstrap: bootstrap,
+    // 消息实时轮询
+    startPolling: startPolling,
+    stopPolling: stopPolling
   };
 
   init();
