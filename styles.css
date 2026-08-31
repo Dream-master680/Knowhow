@@ -12860,3 +12860,47 @@ body.settings-open { overflow: hidden; }
   }
 }
 
+/* ===== 页面横幅（hero-banner）移动端适配 ===== */
+@media (max-width: 640px) {
+  :root .news-header.hero-banner,
+  :root .forum-header.hero-banner,
+  :root .films-header.hero-banner,
+  :root .lawyers-header.hero-banner,
+  :root .interaction-header.hero-banner {
+    padding: 20px;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  :root .news-header.hero-banner h1,
+  :root .forum-header.hero-banner h1,
+  :root .films-header.hero-banner h1,
+  :root .lawyers-header.hero-banner h1,
+  :root .interaction-header.hero-banner h1 {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+  :root .news-header.hero-banner .news-subtitle,
+  :root .forum-header.hero-banner .forum-subtitle,
+  :root .films-header.hero-banner .header-subtitle,
+  :root .lawyers-header.hero-banner .lawyers-subtitle,
+  :root .interaction-header.hero-banner .interaction-subtitle {
+    font-size: 14px;
+  }
+}
+@media (max-width: 480px) {
+  :root .news-header.hero-banner,
+  :root .forum-header.hero-banner,
+  :root .films-header.hero-banner,
+  :root .lawyers-header.hero-banner,
+  :root .interaction-header.hero-banner {
+    padding: 16px;
+  }
+  :root .news-header.hero-banner h1,
+  :root .forum-header.hero-banner h1,
+  :root .films-header.hero-banner h1,
+  :root .lawyers-header.hero-banner h1,
+  :root .interaction-header.hero-banner h1 {
+    font-size: 21px;
+  }
+}
+

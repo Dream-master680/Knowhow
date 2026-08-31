@@ -1616,3 +1616,15 @@ html[data-font="xl"] body { overflow-x: hidden; }
   border: 1px solid var(--c-card-border);
   border-radius: 20px;
 }
+
+/* 页面横幅移动端适配（自定义主题）：压过上面 40px 固定内边距 */
+@media (max-width: 640px) {
+  :root:not([data-theme="original"]) .interaction-header.hero-banner {
+    padding: 20px;
+  }
+}
+@media (max-width: 480px) {
+  :root:not([data-theme="original"]) .interaction-header.hero-banner {
+    padding: 16px;
+  }
+}
