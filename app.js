@@ -177,6 +177,36 @@
     return `https://loremflickr.com/${size}/${group}?lock=${lock}`;
   };
 
+  /* ── 精选法治主题配图池（论坛缩略图 / 未知板块兜底用，比 loremflickr 随机图更契合主题） ── */
+  const LEGAL_IMG_POOL = [
+    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1589391886645-d51941baf7fb?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1521791055366-0d553872125f?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1556155092-490a1ba16284?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=70'
+  ];
+  // 各板块横幅：按板块主题各配一张专属大图，保证互不重复
+  const SECTION_BANNERS = {
+    news:        'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1600&q=70', // 法槌 · 法治头条
+    films:       'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1600&q=70', // 影院 · 影视
+    forum:       'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1600&q=70', // 书库 · 法律论坛
+    lawyers:     'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1600&q=70', // 律师 · 律师推广
+    interaction: 'https://images.unsplash.com/photo-1521791055366-0d553872125f?auto=format&fit=crop&w=1600&q=70'  // 握手 · 法律互动
+  };
+  // 页面横幅（顶部主模块）：板块专属图优先，未知板块再从池中稳定挑一张
+  const legalBannerFor = (key) => SECTION_BANNERS[key] || LEGAL_IMG_POOL[stableHash('banner-' + key) % LEGAL_IMG_POOL.length];
+  // 论坛卡片小缩略图：同一来源的小尺寸图
+  const legalThumbFor = (key) => legalBannerFor('thumb-' + key).replace('w=1600', 'w=480').replace('w=1200', 'w=480');
+
   const initialOf = (name) => String(name || 'U').trim().charAt(0).toUpperCase();
 
   /* ── 影视中心种子数据：全部可播放，带 B站真实封面 ────────────
@@ -218,11 +248,164 @@
     writeStorage(STORAGE_KEYS.films, next);
   };
 
+  // 2026 内容迁移：清理旧浏览器里 2025 过时种子条目（按标题黑名单，只删种子、保留用户自增内容），版本键保证只跑一次
+  const NEWS_2025_DEPRECATED = [
+    '全国人大审议部分法律修订草案',
+    '多地推出涉企合规指引',
+    '最高法发布司法解释',
+    '司法部发布公共法律服务体系建设新规',
+    '最高检通报涉未成年人司法保护典型案例',
+    '多部门联合开展劳动用工合规专项整治',
+    '全国法院推进多元解纷机制数字化升级'
+  ];
+  const LAWUPDATES_2025_DEPRECATED = [
+    '公司法（修订）',
+    '行政处罚法（修订）',
+    '民事诉讼法（相关条款完善）',
+    '消费者权益保护法（实施细则）',
+    '数据安全配套规范（行业指引）'
+  ];
+  const migrateContent2026 = () => {
+    if (readStorage('ln_content_v2026_done', false)) return;
+    const news = readStorage(STORAGE_KEYS.news, []);
+    if (Array.isArray(news)) {
+      const kept = news.filter(n => !NEWS_2025_DEPRECATED.includes(n && n.title));
+      if (kept.length !== news.length) writeStorage(STORAGE_KEYS.news, kept);
+    }
+    const lu = readStorage(STORAGE_KEYS.lawUpdates, []);
+    if (Array.isArray(lu)) {
+      const kept = lu.filter(x => !LAWUPDATES_2025_DEPRECATED.includes(x && x.name));
+      if (kept.length !== lu.length) writeStorage(STORAGE_KEYS.lawUpdates, kept);
+    }
+    writeStorage('ln_content_v2026_done', true);
+  };
+
+  // 清除无效律师种子（未绑定用户账号、无法联系/加好友）：按种子姓名匹配且缺 username 才删，保留用户自增律师
+  const INVALID_LAWYER_SEED_NAMES = ['李律师', '王律师', '陈律师'];
+  const migrateInvalidLawyers = () => {
+    if (readStorage('ln_lawyers_invalid_done', false)) return;
+    const lawyers = readStorage(STORAGE_KEYS.lawyers, []);
+    if (Array.isArray(lawyers)) {
+      const kept = lawyers.filter(l => !(l && INVALID_LAWYER_SEED_NAMES.includes(l.name) && !l.username));
+      if (kept.length !== lawyers.length) writeStorage(STORAGE_KEYS.lawyers, kept);
+    }
+    writeStorage('ln_lawyers_invalid_done', true);
+  };
+
+  // ── 展示内容种子（唯一权威源：离线 seedIfEmpty 与在线 post-bootstrap 补播共用）──
+  const NEWS_SEED = [
+    // ── 法治头条：真实 2026 权威要闻（含原文链接与配图）──
+    { id: nid(), title: '最高法废止公益诉讼试点实施办法 相关案件依法适用生态环境法典', date: '2026-08-05',
+      tags: ['司法解释', '公益诉讼', '最高法'],
+      summary: '最高人民法院发布决定，废止《人民法院审理人民检察院提起公益诉讼案件试点工作实施办法》，试点制度成果已由生态环境法典等法律吸收，相关案件依法按新法办理。',
+      source: 'https://www.court.gov.cn/', sourceName: '最高人民法院',
+      img: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '生态环境部联合“两高”发布生态环境损害赔偿制度改革十大案例', date: '2026-08-17',
+      tags: ['生态环境', '损害赔偿', '典型案例'],
+      summary: '生态环境部、最高人民法院、最高人民检察院联合发布生态环境损害赔偿制度改革十大典型案例，涵盖跨区域污染、非法开采致生态破坏与修复责任承担等情形，示范责任认定与修复执行路径。',
+      source: 'https://www.mee.gov.cn/', sourceName: '生态环境部',
+      img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '最高法发布适用生态环境法典时间效力的若干规定', date: '2026-08-06',
+      tags: ['生态环境法典', '司法解释', '法律适用'],
+      summary: '为正确适用自8月15日起施行的《中华人民共和国生态环境法典》，最高法发布关于时间效力的若干规定，明确法典施行前后行为的法律适用衔接规则，确保新旧法律平稳过渡。',
+      source: 'https://www.court.gov.cn/', sourceName: '最高人民法院',
+      img: 'https://images.unsplash.com/photo-1589391886645-d51941baf7fb?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '最高检发布第六十三批指导性案例', date: '2026-08-05',
+      tags: ['检察', '指导性案例', '最高检'],
+      summary: '最高人民检察院发布第六十三批指导性案例，聚焦生态环境保护领域检察公益诉讼与刑事办案，为同类案件的法律适用与办案标准提供明确指引。',
+      source: 'https://www.spp.gov.cn/', sourceName: '最高人民检察院',
+      img: 'https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '生态环境法典正式施行 我国继民法典之后第二部法典', date: '2026-08-15',
+      tags: ['立法', '法典', '生态环境'],
+      summary: '《中华人民共和国生态环境法典》自2026年8月15日起施行，共5编1242条，依次为总则、污染防治、生态保护、绿色低碳发展、法律责任和附则，环境保护法等10部法律同时废止。',
+      source: 'https://news.enorth.com.cn/system/2026/03/13/059220371.shtml', sourceName: '北方网·新华鲜报',
+      img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '“两高”修改涉生态环境领域两件司法解释 自8月15日起施行', date: '2026-08-08',
+      tags: ['司法解释', '生态环境', '两高'],
+      summary: '为贯彻实施生态环境法典，“两高”联合决定修改海洋生态环境公益诉讼、环境污染刑事案件两件司法解释，明确检察机关可向海事法院提起民事公益诉讼等要求。',
+      source: 'https://www.jcrb.com/jc/202608/t20260808_916588.html', sourceName: '正义网',
+      img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '“两高”发布非法占用耕地司法解释：对非法占用耕地“零容忍”', date: '2026-05-11',
+      tags: ['司法解释', '耕地保护', '自然资源'],
+      summary: '两高联合发布《关于办理非法占用耕地案件适用法律若干问题的规定》。发布会披露：依法起诉非法占用农用地犯罪9800余人，督促复垦耕地25.2万亩，督促缴纳耕地修复费用16.05亿元。',
+      source: 'https://www.gdzf.org.cn/index/zfyw/content/post_197345.html', sourceName: '广东政法',
+      img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '新修订的商标法表决通过 2027年1月1日起施行', date: '2026-06-26',
+      tags: ['立法', '知识产权', '商标法'],
+      summary: '十四届全国人大常委会第二十三次会议表决通过新修订的商标法，系1983年施行四十余年来首次全面修订，体例由8章73条增至9章87条，首次在法律层面界定“商标”定义。',
+      source: 'http://politics.people.com.cn/BIG5/n1/2026/0626/c1024-40748488.html', sourceName: '人民网',
+      img: 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '最高法发布6起消费者权益保护典型案例', date: '2026-03-15',
+      tags: ['典型案例', '消费者权益', '民法典'],
+      summary: '国际消费者权益日当天，最高法发布6起典型案例。其中预订酒店“30分钟后不可取消”的格式条款被认定无效，法院按经营者实际损失为基础判决退还房费1000元。',
+      source: 'https://peking.bjd.com.cn/content/s69b64161e4b0687a2892906e.html', sourceName: '北京日报',
+      img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '最高法解读：预付式消费付款7日内可无理由退款', date: '2026-03-09',
+      tags: ['消费维权', '司法解释', '民法典'],
+      summary: '最高法出台预付式消费司法解释并发布典型案例，明确付款7日内可无理由退还本金，“概不退款”等霸王条款无效，经营者“卷款跑路”构成欺诈的承担惩罚性赔偿责任。',
+      source: 'http://news.cnr.cn/native/gd/20260309/t20260309_527547238.shtml', sourceName: '央广网',
+      img: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '人社部“十五五”规划：劳动调解仲裁推进“四化”建设', date: '2026-07-31',
+      tags: ['劳动保障', '调解仲裁', '人社'],
+      summary: '《人力资源和社会保障事业发展“十五五”规划》提出推进调解仲裁规范化、标准化、专业化、智能化建设。数据显示案件调解成功率已由70.6%提升至81.1%，仲裁结案率达98.4%。',
+      source: 'https://chinajob.mohrss.gov.cn/h5/c/2026-07-31/580791.shtml', sourceName: '人力资源和社会保障部',
+      img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '上半年治理欠薪成效显著：公布重大欠薪违法906件', date: '2026-08-05',
+      tags: ['欠薪治理', '劳动权益', '人社'],
+      summary: '人社部加大欠薪治理力度，上半年公布重大欠薪违法行为906件，将697户用人单位纳入欠薪失信名单，向公安机关移送涉罪欠薪案件1375件，并对欠薪失信主体实施联合惩戒。',
+      source: 'https://city.newssc.org/system/20260805/003624885.html', sourceName: '四川新闻网',
+      img: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '全国开展清理整顿人力资源市场秩序专项行动', date: '2026-05-09',
+      tags: ['就业权益', '市场监管', '人社'],
+      summary: '2026年4月至7月，全国集中整治“招转培（贷）”欺诈，清理“央国企内推”“保录直签”等虚假招聘信息，查处“假外包、真派遣”，依法纠治各类就业歧视行为。',
+      source: 'http://career.youth.cn/Zxzx/202605/t20260509_16650516.htm', sourceName: '中国青年网',
+      img: 'https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&w=1200&q=70' },
+    { id: nid(), title: '民法典实施五年：审结人格权纠纷案件96万件', date: '2026-03-09',
+      tags: ['民法典', '人格权', '司法数据'],
+      summary: '最高法解读工作报告：2021年至2025年审结人格权纠纷案件96万件、年均增长5.1%，2025年制定民法典婚姻家庭编司法解释（二），高空抛物依民法典第1254条明确责任。',
+      source: 'https://m.gmw.cn/2026-03/09/content_1304369923.htm', sourceName: '光明网',
+      img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=70' }
+  ];
+  const LAW_UPDATE_SEED = [
+    // ── 2026 年度施行的真实新法（含 2025 年修订法律）──
+    { id: nid(), name: '治安管理处罚法（2025年修订）', effectiveDate: '2026-01-01', summary: '完善处罚种类与程序，强化公民权利的程序保障，新增未成年人保护等规定。' },
+    { id: nid(), name: '增值税法', effectiveDate: '2026-01-01', summary: '我国增值税领域首部法律，将征收管理上升为法律规定，明确税率结构与征收规则。' },
+    { id: nid(), name: '国家公园法', effectiveDate: '2026-01-01', summary: '国家公园领域首部基础性法律，确立设立、保护、管理与共建共享等基本制度。' },
+    { id: nid(), name: '网络安全法（2025年修正）', effectiveDate: '2026-01-01', summary: '健全网络安全管理体制，强化关键信息基础设施保护与数据安全协同治理。' },
+    { id: nid(), name: '国家通用语言文字法（2025年修订）', effectiveDate: '2026-01-01', summary: '强化国家通用语言文字推广普及与规范使用，完善数字化时代用语用字管理。' },
+    { id: nid(), name: '民用航空法（2025年修订）', effectiveDate: '2026-07-01', summary: '适应低空经济与民航强国建设，完善航空安全、旅客权益保护与通用航空制度。' }
+  ];
+  const LAWYER_SEED = [
+    // 律师种子只保留绑定了用户账号（username='lawyer'）的张律师；
+    // 李/王/陈律师未绑定账号、无法联系/加好友，属无效条目已移除（老浏览器由 migrateInvalidLawyers 清理）
+    { id: nid(), name: '张律师', firm: '北京大成律师事务所', areas: ['民商事', '公司法', '合同法'], bio: '专业从事民商事法律事务，具有丰富的诉讼和非诉讼经验', verified: true, username: 'lawyer', createdAt: Date.now() - 50000 }
+  ];
+
+  // 在线补播：bootstrap/poll 后服务器未提供某展示键时，本地补播并上送（空服务器由首个访客自举）。
+  // 判断必须用 Array.isArray && length===0（Sync.read 会缓存 []，truthy 检查会被骗过）。
+  function seedAbsentDisplayKeys() {
+    const seedIfEmptyArr = (key, items) => {
+      const cur = readStorage(key, []);
+      const list = Array.isArray(cur) ? cur : [];
+      if (list.length === 0 && Array.isArray(items) && items.length > 0) {
+        writeStorage(key, items);
+      }
+    };
+    seedIfEmptyArr(STORAGE_KEYS.news, NEWS_SEED);
+    seedIfEmptyArr(STORAGE_KEYS.films, filmSeedWithId());
+    seedIfEmptyArr(STORAGE_KEYS.lawUpdates, LAW_UPDATE_SEED);
+    seedIfEmptyArr(STORAGE_KEYS.lawyers, LAWYER_SEED);
+    // aboutInfo 由 ensureAboutV2 播种（renderAbout 时，空才补默认、非空不覆盖服务端权威）
+  }
+
   function seedIfEmpty() {
     migrateFilmsV2();
+    // 必须先于 ensureSeedCollection：先清旧数据（2025 种子 + 无效律师），再补 2026 新内容
+    migrateContent2026();
+    migrateInvalidLawyers();
     // 后端模式（Sync 在线）下，users/论坛/社区/问答等由服务器首启种子托管，本地不重复播种
     const seedLocal = !window.Sync || window.Sync.localMode();
-    if (!readStorage(STORAGE_KEYS.films)) {
+    if (seedLocal && !readStorage(STORAGE_KEYS.films)) {
       writeStorage(STORAGE_KEYS.films, filmSeedWithId());
     }
     
@@ -274,21 +457,7 @@
     writeStorage('users', existingUsers);
     }
 
-    // 添加示例律师数据
-    if (!readStorage(STORAGE_KEYS.lawyers)) {
-      writeStorage(STORAGE_KEYS.lawyers, [
-        {
-          id: nid(),
-          name: '张律师',
-          firm: '北京大成律师事务所',
-          areas: ['民商事', '公司法', '合同法'],
-          bio: '专业从事民商事法律事务，具有丰富的诉讼和非诉讼经验',
-          verified: true,
-          username: 'lawyer',
-          createdAt: Date.now() - 50000
-        }
-      ]);
-    }
+    // 律师种子改由下方 ensureSeedCollection 统一补充（避免 migrateInvalidLawyers 缓存 [] 后跳过 truthy 检查）
     
     // 添加示例律师案件数据
     if (seedLocal && !readStorage('lawyer_cases')) {
@@ -363,13 +532,6 @@
         }
       ]);
     }
-    if (!readStorage(STORAGE_KEYS.news)) {
-      writeStorage(STORAGE_KEYS.news, [
-        { id: nid(), title: '全国人大审议部分法律修订草案', date: '2025-03-12', tags: ['立法', '时政'], summary: '聚焦完善相关条款，提升制度效能。' },
-        { id: nid(), title: '多地推出涉企合规指引', date: '2025-02-26', tags: ['合规', '营商环境'], summary: '以公开透明促高质量发展。' },
-        { id: nid(), title: '最高法发布司法解释', date: '2025-01-08', tags: ['司法解释', '法院'], summary: '统一裁判尺度，回应社会关切。' }
-      ]);
-    }
     if (seedLocal && !readStorage(STORAGE_KEYS.forum)) {
       writeStorage(STORAGE_KEYS.forum, [
         { id: nid(), title: '如何理解居住权？', content: '居住权与所有权的关系如何把握？', createdAt: Date.now() - 86400000, replies: [ { id: nid(), content: '可参考民法典权利体系章节。', createdAt: Date.now() - 86000000 } ] },
@@ -385,13 +547,6 @@
         { id: nid(), question: '劳动合同到期公司不续签怎么办？', answers: [ { id: nid(), text: '依法支付经济补偿，注意证据留存。' } ], createdAt: Date.now() - 7200_000 }
       ]);
     }
-    if (!readStorage(STORAGE_KEYS.lawUpdates)) {
-      writeStorage(STORAGE_KEYS.lawUpdates, [
-        { id: nid(), name: '公司法（修订）', effectiveDate: '2025-07-01', summary: '注册资本与公司治理规则优化。' },
-        { id: nid(), name: '行政处罚法（修订）', effectiveDate: '2025-04-01', summary: '程序规则完善，强调比例原则。' }
-      ]);
-    }
-
     // 增量补充基础数据：即使已有数据，也会补齐核心展示内容
     const ensureSeedCollection = (key, items, uniqueField) => {
       const current = readStorage(key, []);
@@ -403,65 +558,13 @@
       }
     };
 
-    ensureSeedCollection(STORAGE_KEYS.films, filmSeedWithId(), 'title');
+    if (seedLocal) {
+      ensureSeedCollection(STORAGE_KEYS.films, filmSeedWithId(), 'title');
+    }
 
-    ensureSeedCollection(STORAGE_KEYS.news, [
-      { id: nid(), title: '司法部发布公共法律服务体系建设新规', date: '2025-03-28', tags: ['司法行政', '公共服务'], summary: '强化基层法律服务供给，推进公共法律服务均衡化。' },
-      { id: nid(), title: '最高检通报涉未成年人司法保护典型案例', date: '2025-03-19', tags: ['未成年人保护', '检察'], summary: '聚焦校园安全与家庭监护责任，释放从严保护信号。' },
-      { id: nid(), title: '多部门联合开展劳动用工合规专项整治', date: '2025-02-14', tags: ['劳动法', '合规'], summary: '重点整治欠薪、超时加班和用工合同不规范等问题。' },
-      { id: nid(), title: '全国法院推进多元解纷机制数字化升级', date: '2025-01-22', tags: ['司法改革', '数字化'], summary: '通过线上调解平台提升纠纷解决效率与可及性。' },
-      // ── 法治头条：真实 2026 权威要闻（含原文链接与配图）──
-      { id: nid(), title: '生态环境法典正式施行 我国继民法典之后第二部法典', date: '2026-08-15',
-        tags: ['立法', '法典', '生态环境'],
-        summary: '《中华人民共和国生态环境法典》自2026年8月15日起施行，共5编1242条，依次为总则、污染防治、生态保护、绿色低碳发展、法律责任和附则，环境保护法等10部法律同时废止。',
-        source: 'https://news.enorth.com.cn/system/2026/03/13/059220371.shtml', sourceName: '北方网·新华鲜报',
-        img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '“两高”修改涉生态环境领域两件司法解释 自8月15日起施行', date: '2026-08-08',
-        tags: ['司法解释', '生态环境', '两高'],
-        summary: '为贯彻实施生态环境法典，“两高”联合决定修改海洋生态环境公益诉讼、环境污染刑事案件两件司法解释，明确检察机关可向海事法院提起民事公益诉讼等要求。',
-        source: 'https://www.jcrb.com/jc/202608/t20260808_916588.html', sourceName: '正义网',
-        img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '“两高”发布非法占用耕地司法解释：对非法占用耕地“零容忍”', date: '2026-05-11',
-        tags: ['司法解释', '耕地保护', '自然资源'],
-        summary: '两高联合发布《关于办理非法占用耕地案件适用法律若干问题的规定》。发布会披露：依法起诉非法占用农用地犯罪9800余人，督促复垦耕地25.2万亩，督促缴纳耕地修复费用16.05亿元。',
-        source: 'https://www.gdzf.org.cn/index/zfyw/content/post_197345.html', sourceName: '广东政法',
-        img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '新修订的商标法表决通过 2027年1月1日起施行', date: '2026-06-26',
-        tags: ['立法', '知识产权', '商标法'],
-        summary: '十四届全国人大常委会第二十三次会议表决通过新修订的商标法，系1983年施行四十余年来首次全面修订，体例由8章73条增至9章87条，首次在法律层面界定“商标”定义。',
-        source: 'http://politics.people.com.cn/BIG5/n1/2026/0626/c1024-40748488.html', sourceName: '人民网',
-        img: 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '最高法发布6起消费者权益保护典型案例', date: '2026-03-15',
-        tags: ['典型案例', '消费者权益', '民法典'],
-        summary: '国际消费者权益日当天，最高法发布6起典型案例。其中预订酒店“30分钟后不可取消”的格式条款被认定无效，法院按经营者实际损失为基础判决退还房费1000元。',
-        source: 'https://peking.bjd.com.cn/content/s69b64161e4b0687a2892906e.html', sourceName: '北京日报',
-        img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '最高法解读：预付式消费付款7日内可无理由退款', date: '2026-03-09',
-        tags: ['消费维权', '司法解释', '民法典'],
-        summary: '最高法出台预付式消费司法解释并发布典型案例，明确付款7日内可无理由退还本金，“概不退款”等霸王条款无效，经营者“卷款跑路”构成欺诈的承担惩罚性赔偿责任。',
-        source: 'http://news.cnr.cn/native/gd/20260309/t20260309_527547238.shtml', sourceName: '央广网',
-        img: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '人社部“十五五”规划：劳动调解仲裁推进“四化”建设', date: '2026-07-31',
-        tags: ['劳动保障', '调解仲裁', '人社'],
-        summary: '《人力资源和社会保障事业发展“十五五”规划》提出推进调解仲裁规范化、标准化、专业化、智能化建设。数据显示案件调解成功率已由70.6%提升至81.1%，仲裁结案率达98.4%。',
-        source: 'https://chinajob.mohrss.gov.cn/h5/c/2026-07-31/580791.shtml', sourceName: '人力资源和社会保障部',
-        img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '上半年治理欠薪成效显著：公布重大欠薪违法906件', date: '2026-08-05',
-        tags: ['欠薪治理', '劳动权益', '人社'],
-        summary: '人社部加大欠薪治理力度，上半年公布重大欠薪违法行为906件，将697户用人单位纳入欠薪失信名单，向公安机关移送涉罪欠薪案件1375件，并对欠薪失信主体实施联合惩戒。',
-        source: 'https://city.newssc.org/system/20260805/003624885.html', sourceName: '四川新闻网',
-        img: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '全国开展清理整顿人力资源市场秩序专项行动', date: '2026-05-09',
-        tags: ['就业权益', '市场监管', '人社'],
-        summary: '2026年4月至7月，全国集中整治“招转培（贷）”欺诈，清理“央国企内推”“保录直签”等虚假招聘信息，查处“假外包、真派遣”，依法纠治各类就业歧视行为。',
-        source: 'http://career.youth.cn/Zxzx/202605/t20260509_16650516.htm', sourceName: '中国青年网',
-        img: 'https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&w=1200&q=70' },
-      { id: nid(), title: '民法典实施五年：审结人格权纠纷案件96万件', date: '2026-03-09',
-        tags: ['民法典', '人格权', '司法数据'],
-        summary: '最高法解读工作报告：2021年至2025年审结人格权纠纷案件96万件、年均增长5.1%，2025年制定民法典婚姻家庭编司法解释（二），高空抛物依民法典第1254条明确责任。',
-        source: 'https://m.gmw.cn/2026-03/09/content_1304369923.htm', sourceName: '光明网',
-        img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=70' }
-    ], 'title');
+    if (seedLocal) {
+      ensureSeedCollection(STORAGE_KEYS.news, NEWS_SEED, 'title');
+    }
 
     if (seedLocal) {
     ensureSeedCollection(STORAGE_KEYS.forum, [
@@ -483,17 +586,15 @@
     ], 'question');
     }
 
-    ensureSeedCollection(STORAGE_KEYS.lawUpdates, [
-      { id: nid(), name: '民事诉讼法（相关条款完善）', effectiveDate: '2025-09-01', summary: '优化简易程序与电子送达机制，提升审判效率。' },
-      { id: nid(), name: '消费者权益保护法（实施细则）', effectiveDate: '2025-06-15', summary: '强化平台责任与举证规则，完善先行赔付机制。' },
-      { id: nid(), name: '数据安全配套规范（行业指引）', effectiveDate: '2025-08-01', summary: '明确数据分类分级、跨境传输评估与审计要求。' }
-    ], 'name');
+    if (seedLocal) {
+      ensureSeedCollection(STORAGE_KEYS.lawUpdates, LAW_UPDATE_SEED, 'name');
+    }
 
-    ensureSeedCollection(STORAGE_KEYS.lawyers, [
-      { id: nid(), name: '李律师', firm: '上海锦天城律师事务所', areas: ['劳动争议', '企业合规'], bio: '长期服务中小企业劳动用工与合规治理项目。', verified: true, createdAt: Date.now() - 45000 },
-      { id: nid(), name: '王律师', firm: '广东广和律师事务所', areas: ['知识产权', '合同纠纷'], bio: '专注知识产权保护与商业合同争议解决。', verified: true, createdAt: Date.now() - 38000 },
-      { id: nid(), name: '陈律师', firm: '浙江六和律师事务所', areas: ['婚姻家事', '民商事诉讼'], bio: '擅长婚姻家事与民商事诉讼，注重调解与和解方案。', verified: false, createdAt: Date.now() - 32000 }
-    ], 'name');
+    // 律师种子只保留绑定了用户账号（username='lawyer'）的张律师；
+    // 李/王/陈律师未绑定账号、无法联系/加好友，属无效条目已移除（老浏览器由 migrateInvalidLawyers 清理）
+    if (seedLocal) {
+      ensureSeedCollection(STORAGE_KEYS.lawyers, LAWYER_SEED, 'name');
+    }
     
     // 确保admin用户是唯一的超级管理员（后端模式下由服务器保证）
     if (seedLocal) {
@@ -704,7 +805,7 @@
   function updatePageBackground(path) {
     const routeBackgrounds = [
       { test: p => p === '/', url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1800&q=80' },
-      { test: p => p === '/about', url: 'https://images.unsplash.com/photo-1453873623425-02b607c67bb4?auto=format&fit=crop&w=1800&q=80' },
+      { test: p => p === '/about', url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1800&q=80' },
       { test: p => p === '/login' || p === '/logout', url: 'https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1800&q=80' },
       { test: p => p.startsWith('/films') || p.startsWith('/film'), url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1800&q=80' },
       { test: p => p.startsWith('/news'), url: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1800&q=80' },
@@ -1003,7 +1104,17 @@
   window.addEventListener('hashchange', navigate);
   window.addEventListener('DOMContentLoaded', () => { seedIfEmpty(); navigate(); updateAuthUI(); });
   // 同步桥事件：bootstrap 完成 → 重渲当前页拿服务器数据；服务器不可达降级本地 → 补播被跳过的服务端键
-  window.addEventListener('kh:datasync', () => { navigate(); updateAuthUI(); });
+  window.addEventListener('kh:datasync', () => {
+    // 在线补播：bootstrap/poll 后服务端某展示键仍缺失（如空服务器首访）→ 本地播种随 flush 上送自举
+    seedAbsentDisplayKeys();
+    // 管理后台停留在某个内嵌子视图时：就地重渲该子视图，不拉回后台首页（轮询同步不打断管理操作）
+    if (location.hash.startsWith('#/admin') && activeAdminSubView) {
+      try { window[activeAdminSubView](); } catch (e) { navigate(); }
+    } else {
+      navigate();
+    }
+    updateAuthUI();
+  });
   window.addEventListener('kh:syncfallback', () => { seedIfEmpty(); navigate(); updateAuthUI(); });
 
   function html(strings, ...values) {
@@ -1015,53 +1126,81 @@
     enhanceDynamicUI();
   }
 
-  function initHomeHeroMotion() {
-    if (window.__heroTicker) {
-      clearInterval(window.__heroTicker);
-      window.__heroTicker = null;
+  function initGovHeroCarousel() {
+    if (window.__govHeroTicker) {
+      clearInterval(window.__govHeroTicker);
+      window.__govHeroTicker = null;
     }
 
-    const hero = document.querySelector('.hero-section');
-    const quoteEl = document.querySelector('.hero-quote');
-    if (!hero || !quoteEl) return;
-
-    const heroScenes = [
-      {
-        image: 'https://images.unsplash.com/photo-1589994965851-a8f479c573a9?auto=format&fit=crop&w=1800&q=80',
-        quote: '法律的温度，不在口号里，而在每一次被认真倾听的求助里。'
-      },
-      {
-        image: 'https://images.unsplash.com/photo-1453873623425-02b607c67bb4?auto=format&fit=crop&w=1800&q=80',
-        quote: '在理性与善意之间，选择认真，才是解决问题的第一步。'
-      },
-      {
-        image: 'https://images.unsplash.com/photo-1436450412740-6b988f486c6b?auto=format&fit=crop&w=1800&q=80',
-        quote: '每一条规则的意义，都是让普通人的明天多一份确定。'
-      }
-    ];
+    const carousel = document.querySelector('.gov-hero-carousel');
+    if (!carousel) return;
+    const slides = Array.from(carousel.querySelectorAll('.gov-hero-slide'));
+    if (!slides.length) return;
+    const dots = Array.from(carousel.querySelectorAll('.gov-hero-dot'));
 
     let idx = 0;
-    hero.style.setProperty('--hero-bg-image', `url('${heroScenes[0].image}')`);
-    quoteEl.textContent = heroScenes[0].quote;
 
-    window.__heroTicker = setInterval(() => {
-      idx = (idx + 1) % heroScenes.length;
-      const scene = heroScenes[idx];
+    const go = (i) => {
+      idx = (i + slides.length) % slides.length;
+      slides.forEach((s, n) => s.classList.toggle('is-active', n === idx));
+      dots.forEach((d, n) => d.classList.toggle('is-active', n === idx));
+    };
 
-      hero.classList.add('is-switching');
-      quoteEl.classList.add('is-switching');
+    const start = () => {
+      if (window.__govHeroTicker) clearInterval(window.__govHeroTicker);
+      window.__govHeroTicker = setInterval(() => go(idx + 1), 5200);
+    };
+    const stop = () => {
+      if (window.__govHeroTicker) {
+        clearInterval(window.__govHeroTicker);
+        window.__govHeroTicker = null;
+      }
+    };
 
-      setTimeout(() => {
-        hero.style.setProperty('--hero-bg-image', `url('${scene.image}')`);
-        quoteEl.textContent = scene.quote;
-      }, 280);
+    window.govCarouselGo = (dir) => { go(idx + dir); start(); };
+    window.govCarouselGoTo = (n) => { go(n); start(); };
 
-      setTimeout(() => {
-        hero.classList.remove('is-switching');
-        quoteEl.classList.remove('is-switching');
-      }, 640);
-    }, 5200);
+    const prev = carousel.querySelector('.gov-hero-arrow.prev');
+    const next = carousel.querySelector('.gov-hero-arrow.next');
+    if (prev) prev.addEventListener('click', () => window.govCarouselGo(-1));
+    if (next) next.addEventListener('click', () => window.govCarouselGo(1));
+    dots.forEach((d, n) => d.addEventListener('click', () => window.govCarouselGoTo(n)));
+
+    carousel.addEventListener('mouseenter', stop);
+    carousel.addEventListener('mouseleave', start);
+
+    start();
   }
+
+  // 首页新闻详情：优先用新闻页的完整详情（需用户访问过 #/news 才挂载），否则自渲染简版
+  window.showHomeNewsDetail = (id) => {
+    if (typeof window.showNewsDetail === 'function') {
+      window.showNewsDetail(id);
+      return;
+    }
+    const all = readStorage(STORAGE_KEYS.news, []);
+    const n = all.find(x => x.id === id);
+    if (!n) return;
+    setApp(html`
+      <div class="news-detail-page">
+        <div class="news-detail-header">
+          <button class="btn secondary" onclick="renderHome()">← 返回首页</button>
+          <h1>${escapeHtml(n.title)}</h1>
+        </div>
+        <div class="news-detail-content">
+          <div class="news-detail-meta">
+            <div class="meta-item"><span class="meta-label">发布日期</span><span class="meta-value">${escapeHtml(n.date)}</span></div>
+            ${n.sourceName ? `<div class="meta-item"><span class="meta-label">来源</span><span class="meta-value">${escapeHtml(n.sourceName)}</span></div>` : ''}
+          </div>
+          <div class="news-detail-tags">
+            ${(n.tags || []).map(tag => `<span class="news-tag">${escapeHtml(tag)}</span>`).join('')}
+          </div>
+          <div class="news-detail-summary">${escapeHtml(n.summary)}</div>
+          ${n.source ? `<a class="news-action-btn link" href="${escapeHtml(n.source)}" target="_blank" rel="noopener noreferrer">阅读原文</a>` : ''}
+        </div>
+      </div>
+    `);
+  };
 
   // --- 全站微交互增强 ---
   function enhanceDynamicUI() {
@@ -3580,20 +3719,28 @@
     renderAdminLawyers();
   };
 
+  // 管理后台当前内嵌子视图名（律师审核/用户管理/影视/要闻/论坛/社区/问答/法条/律师/消息/数据/简介/分析等）：
+  // 轮询同步（kh:datasync）触发重渲时就地重渲该子视图，避免把管理员从子视图拉回后台首页
+  let activeAdminSubView = null;
+  const adminSubView = (name, fn) => function () {
+    activeAdminSubView = name;
+    return fn.apply(this, arguments);
+  };
+
   // 全局函数
   window.showAuthModal = showAuthModal;
   window.closeAuthModal = closeAuthModal;
   window.switchAuthTab = switchAuthTab;
-  window.renderAdminUsers = renderAdminUsers;
-  window.renderAdminFilms = renderAdminFilms;
-  window.renderAdminNews = renderAdminNews;
-  window.renderAdminForum = renderAdminForum;
-  window.renderAdminCommunity = renderAdminCommunity;
-  window.renderAdminQA = renderAdminQA;
-  window.renderAdminLawUpdates = renderAdminLawUpdates;
-  window.renderAdminLawyers = renderAdminLawyers;
-  window.renderAdminMessages = renderAdminMessages;
-  window.renderAdminData = renderAdminData;
+  window.renderAdminUsers = adminSubView('renderAdminUsers', renderAdminUsers);
+  window.renderAdminFilms = adminSubView('renderAdminFilms', renderAdminFilms);
+  window.renderAdminNews = adminSubView('renderAdminNews', renderAdminNews);
+  window.renderAdminForum = adminSubView('renderAdminForum', renderAdminForum);
+  window.renderAdminCommunity = adminSubView('renderAdminCommunity', renderAdminCommunity);
+  window.renderAdminQA = adminSubView('renderAdminQA', renderAdminQA);
+  window.renderAdminLawUpdates = adminSubView('renderAdminLawUpdates', renderAdminLawUpdates);
+  window.renderAdminLawyers = adminSubView('renderAdminLawyers', renderAdminLawyers);
+  window.renderAdminMessages = adminSubView('renderAdminMessages', renderAdminMessages);
+  window.renderAdminData = adminSubView('renderAdminData', renderAdminData);
   // 前端页面渲染函数（供内联 onclick 的「返回/取消」按钮使用）
   window.renderFilms = renderFilms;
   window.renderNews = renderNews;
@@ -3636,10 +3783,10 @@
     });
   });
 
-  // ── 简介 v2：新内容 + 覆盖本地旧简介 ──────────────
+  // ── 简介 v2：新内容 + 覆盖本地旧简介（2026 版：补全现有模块 + 分阶段升级） ──
   const ABOUT_DEFAULT_V2 = {
     title: 'KnowHow平台简介',
-    content: `KnowHow 是一个面向普通人的法律信息服务平台，用影视、要闻、论坛、法律时效和律师服务，把法律讲成听得懂、用得上的话。平台坚持「红色法治 · 服务人民」，让每个普通人都能在需要时得到回应。
+    content: `KnowHow 是一个面向普通人的法律信息服务平台，用影视、要闻、论坛、法律时效、民法典和律师服务，把法律讲成听得懂、用得上的话。2026 年平台持续迭代：法治头条实时更新权威要闻，AI「法律小Know」全天候在线，支持与律师一对一实时沟通。平台坚持「红色法治 · 服务人民」，让每个普通人都能在需要时得到回应。
 
 ## 核心模块
 
@@ -3647,13 +3794,19 @@
 - 普法课堂与民法典专题，可观看的法律视频
 
 ### 📰 法治头条
-- 法律政策解读与法治建设进展
+- 法律政策解读与 2026 权威法治要闻，实时更新
+
+### 🤖 AI 法律小Know
+- 登录后智能法律咨询，24 小时在线，支持语音朗读
 
 ### 💬 论坛交流
-- 法律问题讨论，律师在线答疑
+- 法律问题讨论，律师在线答疑，支持内联编辑与一键展开
 
 ### 📖 民法典在线阅读
 - 在线阅读《中华人民共和国民法典》精选法条，编章目录导航 + 全文检索
+
+### 👥 实时交流
+- 好友申请与审批，消息多端实时同步，支持撤回与删除
 
 ### 💼 律师推广
 - 律师名片展示与法律咨询预约
@@ -3668,17 +3821,38 @@
     lastUpdated: Date.now()
   };
 
-  // 覆盖浏览器里已存的旧版简介内容（只执行一次，之后保留管理员自定义）
+  // 覆盖浏览器里已存的旧版简介内容（分阶段：v2 旧文案 → v2026 新文案，各自只覆盖一次；
+  // 之后保留管理员自定义——若内容已含新模块标志「AI 法律小Know」则跳过覆盖）
   const ensureAboutV2 = () => {
-    if (readStorage('ln_about_v2_done', false)) return;
-    const current = readStorage('aboutInfo', null);
-    if (current && typeof current === 'object') {
-      current.title = ABOUT_DEFAULT_V2.title;
-      current.content = ABOUT_DEFAULT_V2.content;
-      current.lastUpdated = Date.now();
-      writeStorage('aboutInfo', current);
+    // 兜底：aboutInfo 缺失（无论版本键状态）时始终补写默认文案，避免渲染读到 null
+    if (!readStorage('aboutInfo', null)) {
+      writeStorage('aboutInfo', ABOUT_DEFAULT_V2);
     }
-    writeStorage('ln_about_v2_done', true);
+    // 在线：服务端拉回的内容即权威（含管理员跨端自定义），跳过旧版覆盖；
+    // 空服务器首访播种的默认文案也会随 flush 上送自举。
+    if (window.Sync && !window.Sync.localMode()) return;
+    if (!readStorage('ln_about_v2_done', false)) {
+      const current = readStorage('aboutInfo', null);
+      if (current && typeof current === 'object') {
+        current.title = ABOUT_DEFAULT_V2.title;
+        current.content = ABOUT_DEFAULT_V2.content;
+        current.lastUpdated = Date.now();
+        writeStorage('aboutInfo', current);
+      }
+      writeStorage('ln_about_v2_done', true);
+    }
+    // v2026：老浏览器若仍是旧版简介（不含新模块标志）则升级到 2026 文案
+    if (!readStorage('ln_about_v2026_done', false)) {
+      const cur = readStorage('aboutInfo', null);
+      if (cur && typeof cur === 'object' && typeof cur.content === 'string'
+          && cur.content.indexOf('AI 法律小Know') === -1) {
+        cur.title = ABOUT_DEFAULT_V2.title;
+        cur.content = ABOUT_DEFAULT_V2.content;
+        cur.lastUpdated = Date.now();
+        writeStorage('aboutInfo', cur);
+      }
+      writeStorage('ln_about_v2026_done', true);
+    }
   };
 
   // 简介页面
@@ -3686,7 +3860,7 @@
     if (!requireAuth()) return;
 
     ensureAboutV2();
-    const aboutInfo = readStorage('aboutInfo', ABOUT_DEFAULT_V2);
+    const aboutInfo = readStorage('aboutInfo', ABOUT_DEFAULT_V2) || ABOUT_DEFAULT_V2;
 
     const user = getAuth();
     const isAdmin = user.role === 'admin' || user.role === 'superadmin';
@@ -3768,7 +3942,7 @@
             <div class="about-main-stack">
               <section class="about-section-card">
                 <h2>平台定位</h2>
-                <p>面向普通人讲法律：把复杂条文讲清楚，把维权路径给具体，让每个人都知道自己下一步能做什么。</p>
+                <p>面向普通人讲法律：把复杂条文讲清楚，把维权路径给具体。2026 年，平台汇聚实时法治头条、AI 法律助手与律师在线服务，让每个人都知道自己下一步能做什么。</p>
               </section>
 
               <section class="about-section-card">
@@ -3831,6 +4005,7 @@
 
   // 编辑简介信息
   window.editAboutInfo = () => {
+    activeAdminSubView = 'editAboutInfo';
     const aboutInfo = readStorage('aboutInfo', {
       title: 'KnowHow平台简介',
       content: '',
@@ -3895,7 +4070,9 @@
   // 律师审核页面
   window.renderLawyerApplications = function() {
     if (!requireAuth()) return;
-    
+    // 记录当前管理后台子视图，供 kh:datasync 轮询重渲时原地刷新（不拉回后台首页）
+    activeAdminSubView = 'renderLawyerApplications';
+
     const user = getAuth();
     if (!['superadmin', 'admin'].includes(user.role)) {
       setApp(html`
@@ -3991,6 +4168,28 @@
     `);
   };
 
+  // 协同认证：把服务端审批后的推广卡状态并入本地 ln_lawyers_v1（按 username；
+  // 保留本地已填的详细信息，避免被服务端最小卡覆盖；卡不存在则新建）
+  function applyLawyerCardFromServer(card, createIfMissing) {
+    if (!card || !card.username) return;
+    const lawyers = readStorage(STORAGE_KEYS.lawyers, []);
+    const list = Array.isArray(lawyers) ? lawyers : [];
+    const idx = list.findIndex(l => l && l.username === card.username);
+    if (idx !== -1) {
+      const cur = list[idx] || {};
+      list[idx] = Object.assign({}, cur, {
+        verified: card.verified === true,
+        email: cur.email || card.email || '',
+        updatedAt: Date.now()
+      });
+    } else {
+      // 拒绝场景（createIfMissing===false）：本无卡则不动，不为被拒律师凭空建卡
+      if (createIfMissing === false) return;
+      list.push(Object.assign({ id: nid(), createdAt: Date.now() }, card, { verified: card.verified === true }));
+    }
+    writeStorage(STORAGE_KEYS.lawyers, list);
+  }
+
   // 审核通过律师申请
   window.approveLawyerApplication = function(applicationId) {
     if (!confirm('确定要通过这个律师申请吗？')) return;
@@ -4001,6 +4200,18 @@
         if (!res.ok) {
           alert((res.data && res.data.error) || '操作失败');
           return;
+        }
+        // 服务端已更新：同步回本地缓存，界面立即反映审核结果（无需等下一次轮询）
+        if (res.data && res.data.application) {
+          const apps = readStorage('lawyer_applications', []);
+          const idx = apps.findIndex(a => a.id === applicationId);
+          if (idx !== -1) { apps[idx] = res.data.application; writeStorage('lawyer_applications', apps); }
+        }
+        // 协同认证：通过 → 本地推广卡标记已认证（服务端 upsert 卡优先，缺失时按用户名置 true）
+        if (res.data && res.data.lawyerCard) {
+          applyLawyerCardFromServer(res.data.lawyerCard);
+        } else if (res.data && res.data.application) {
+          applyLawyerCardFromServer({ username: res.data.application.username, name: res.data.application.username, email: res.data.application.email || '', verified: true });
         }
         alert('律师申请已通过！');
         window.Sync.refreshUsers().then(() => renderLawyerApplications());
@@ -4029,7 +4240,10 @@
     
     writeStorage('lawyer_applications', applications);
     writeStorage('users', users);
-    
+
+    // 协同认证（离线）：本地同样把通过者置为已认证推广卡
+    applyLawyerCardFromServer({ username: application.username, name: application.username, email: application.email || '', verified: true });
+
     alert('律师申请已通过！');
     renderLawyerApplications();
   };
@@ -4044,6 +4258,16 @@
         if (!res.ok) {
           alert((res.data && res.data.error) || '操作失败');
           return;
+        }
+        // 服务端已更新：同步回本地缓存，界面立即反映审核结果（无需等下一次轮询）
+        if (res.data && res.data.application) {
+          const apps = readStorage('lawyer_applications', []);
+          const idx = apps.findIndex(a => a.id === applicationId);
+          if (idx !== -1) { apps[idx] = res.data.application; writeStorage('lawyer_applications', apps); }
+        }
+        // 协同认证：拒绝 → 本地已有推广卡则标记未认证（无卡则不动，不为被拒者建卡）
+        if (res.data && res.data.application) {
+          applyLawyerCardFromServer({ username: res.data.application.username, verified: false }, false);
         }
         alert('律师申请已拒绝！');
         window.Sync.refreshUsers().then(() => renderLawyerApplications());
@@ -4072,7 +4296,10 @@
     
     writeStorage('lawyer_applications', applications);
     writeStorage('users', users);
-    
+
+    // 协同认证（离线）：本地已有推广卡则标记为未认证（无卡则不动）
+    applyLawyerCardFromServer({ username: application.username, verified: false }, false);
+
     alert('律师申请已拒绝！');
     renderLawyerApplications();
   };
@@ -4083,8 +4310,13 @@
     const form = document.getElementById('lawyerProfileForm');
     const formData = new FormData(form);
     
+    // 协同认证：读已有卡 → 更新时保留原认证状态；新建默认未认证（认证只能由管理员审批授予）
+    const lawyers = readStorage(STORAGE_KEYS.lawyers, []);
+    const list = Array.isArray(lawyers) ? lawyers : [];
+    const existingIndex = list.findIndex(l => l && l.username === user.username);
+
     const lawyerData = {
-      id: nid(),
+      id: existingIndex >= 0 ? list[existingIndex].id : nid(),
       username: user.username,
       name: formData.get('name'),
       firm: formData.get('firm'),
@@ -4092,8 +4324,8 @@
       bio: formData.get('bio') || '',
       phone: formData.get('phone') || '',
       email: formData.get('email') || '',
-      verified: true,
-      createdAt: Date.now()
+      verified: existingIndex >= 0 ? !!list[existingIndex].verified : false,
+      createdAt: existingIndex >= 0 ? list[existingIndex].createdAt : Date.now()
     };
     
     // 验证必填字段
@@ -4103,29 +4335,30 @@
     }
     
     // 保存到律师推广模块
-    const lawyers = readStorage(STORAGE_KEYS.lawyers, []);
-    const existingIndex = lawyers.findIndex(l => l.username === user.username);
-    
     if (existingIndex >= 0) {
-      lawyers[existingIndex] = lawyerData;
+      list[existingIndex] = lawyerData;
     } else {
-      lawyers.push(lawyerData);
+      list.push(lawyerData);
     }
-    
-    writeStorage(STORAGE_KEYS.lawyers, lawyers);
+
+    writeStorage(STORAGE_KEYS.lawyers, list);
     
     alert('律师信息保存成功！');
     renderLawyerPortal();
   };
 
   // 法律互动页面
+  // 法律互动中心当前激活的标签（咨询/案件/消息）：轮询触发的重渲后保持，不踢回「法律咨询」
+  let activeInteractionTab = 'consultation';
+
   function renderInteraction() {
     if (!requireAuth()) return;
-    
+
     const user = getAuth();
     const consultations = readStorage('legal_consultations', []);
     const cases = readStorage('legal_cases', []);
     const messages = readStorage('legal_messages', []);
+    const activeTab = activeInteractionTab || 'consultation';
     
     // 根据用户角色显示不同的内容
     let userConsultations, userCases, userMessages;
@@ -4144,21 +4377,21 @@
     
     setApp(html`
       <div class="interaction-container">
-        <div class="interaction-header">
+        <div class="interaction-header hero-banner" style="--banner:url('${legalBannerFor('interaction')}');">
           <h1>法律互动中心</h1>
           <p class="interaction-subtitle">专业法律服务，在线咨询与案件对接</p>
           <div class="care-banner">温馨提示：不知道从哪里开始也没关系，你可以先发起咨询，我们会帮助你一步步梳理问题。</div>
         </div>
         
         <div class="interaction-tabs">
-          <button class="tab-btn active" onclick="switchInteractionTab('consultation')">法律咨询</button>
-          <button class="tab-btn" onclick="switchInteractionTab('cases')">案件发布</button>
-          <button class="tab-btn" onclick="switchInteractionTab('messages')">消息中心</button>
+          <button class="tab-btn ${activeTab === 'consultation' ? 'active' : ''}" onclick="switchInteractionTab('consultation')">法律咨询</button>
+          <button class="tab-btn ${activeTab === 'cases' ? 'active' : ''}" onclick="switchInteractionTab('cases')">案件发布</button>
+          <button class="tab-btn ${activeTab === 'messages' ? 'active' : ''}" onclick="switchInteractionTab('messages')">消息中心</button>
         </div>
         
         <div class="interaction-content">
            <!-- 法律咨询 -->
-           <div id="consultationTab" class="tab-content active">
+           <div id="consultationTab" class="tab-content ${activeTab === 'consultation' ? 'active' : ''}">
              <div class="section-header">
                <h2>法律咨询 ${user.role === 'lawyer' ? '(待处理)' : ''}</h2>
                ${user.role !== 'lawyer' ? '<button class="btn primary" onclick="showConsultationModal()">发起咨询</button>' : ''}
@@ -4191,10 +4424,12 @@
                      </div>
                      <div class="consultation-actions">
                        <button class="btn secondary small" onclick="viewConsultation('${consultation.id}')">查看详情</button>
-                       ${consultation.status === 'pending' && user.role === 'lawyer' ? 
+                       ${consultation.status === 'pending' && user.role === 'lawyer' ?
                          `<button class="btn primary small" onclick="replyConsultation('${consultation.id}')">回复咨询</button>` : ''}
-                       ${consultation.status === 'replied' && consultation.userId === user.id ? 
+                       ${consultation.status === 'replied' && consultation.userId === user.id ?
                          `<button class="btn success small" onclick="closeConsultation('${consultation.id}')">关闭咨询</button>` : ''}
+                       ${consultation.userId === user.id ?
+                         `<button class="btn danger small" onclick="deleteConsultation('${consultation.id}')">删除</button>` : ''}
                      </div>
                    </div>
                  `).join('')
@@ -4203,7 +4438,7 @@
            </div>
           
            <!-- 案件发布 -->
-           <div id="casesTab" class="tab-content">
+           <div id="casesTab" class="tab-content ${activeTab === 'cases' ? 'active' : ''}">
              <div class="section-header">
                <h2>案件发布 ${user.role === 'lawyer' ? '(可接单)' : ''}</h2>
                ${user.role !== 'lawyer' ? '<button class="btn primary" onclick="showCaseModal()">发布案件</button>' : ''}
@@ -4237,12 +4472,14 @@
                      </div>
                      <div class="case-actions">
                        <button class="btn secondary small" onclick="viewCase('${caseItem.id}')">查看详情</button>
-                       ${caseItem.status === 'open' && user.role === 'lawyer' ? 
+                       ${caseItem.status === 'open' && user.role === 'lawyer' ?
                          `<button class="btn primary small" onclick="takeCase('${caseItem.id}')">接单</button>` : ''}
-                       ${caseItem.status === 'taken' && caseItem.lawyerId === user.id ? 
+                       ${caseItem.status === 'taken' && caseItem.lawyerId === user.id ?
                          `<button class="btn success small" onclick="updateCaseStatus('${caseItem.id}')">更新状态</button>` : ''}
-                       ${caseItem.status === 'taken' && caseItem.userId === user.id ? 
+                       ${caseItem.status === 'taken' && caseItem.userId === user.id ?
                          `<button class="btn danger small" onclick="cancelCase('${caseItem.id}')">取消案件</button>` : ''}
+                       ${caseItem.userId === user.id ?
+                         `<button class="btn danger small" onclick="deleteCase('${caseItem.id}')">删除</button>` : ''}
                      </div>
                    </div>
                  `).join('')
@@ -4251,7 +4488,7 @@
            </div>
           
           <!-- 消息中心 -->
-          <div id="messagesTab" class="tab-content">
+          <div id="messagesTab" class="tab-content ${activeTab === 'messages' ? 'active' : ''}">
             <div class="section-header">
               <h2>消息中心</h2>
               <button class="btn primary" onclick="showMessageModal()">发送消息</button>
@@ -4264,7 +4501,11 @@
                   <div class="message-card">
                     <div class="message-header">
                       <h4>${escapeHtml(message.title)}</h4>
-                      <span class="message-time">${new Date(message.createdAt).toLocaleString()}</span>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="message-time">${new Date(message.createdAt).toLocaleString()}</span>
+                        ${message.fromUserId === user.id ?
+                          `<button class="btn danger small" onclick="deleteMessageItem('${message.id}')">删除</button>` : ''}
+                      </div>
                     </div>
                     <div class="message-content">
                       <p>${escapeHtml(message.content)}</p>
@@ -4285,12 +4526,17 @@
 
   // 切换互动标签页
   window.switchInteractionTab = function(tabName) {
-    // 移除所有活动状态
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
-    // 激活选中的标签页
-    event.target.classList.add('active');
+    // 记录当前标签，供 renderInteraction 重渲后恢复（轮询同步触发重渲时不踢回咨询页）
+    activeInteractionTab = tabName;
+    // 移除所有活动状态（限定互动页作用域，避免误伤其它页面的 tab）
+    document.querySelectorAll('.interaction-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.interaction-content .tab-content').forEach(content => content.classList.remove('active'));
+
+    // 激活选中的标签页（不依赖全局 event，按 onclick 属性匹配）
+    const btns = document.querySelectorAll('.interaction-tabs .tab-btn');
+    for (const b of btns) {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + tabName + "'") !== -1) b.classList.add('active');
+    }
     document.getElementById(tabName + 'Tab').classList.add('active');
   };
 
@@ -4620,6 +4866,57 @@
      }
      
      alert('案件已取消');
+     renderInteraction();
+   };
+
+   // 删除自己的咨询（号主删帖：仅本人可删，跨设备同步）
+   window.deleteConsultation = function(consultationId) {
+     const user = getAuth();
+     if (!user) return;
+     const consultations = readStorage('legal_consultations', []);
+     const consultation = consultations.find(c => c.id === consultationId);
+     if (!consultation) return;
+     if (consultation.userId !== user.id) {
+       alert('只能删除自己发布的咨询');
+       return;
+     }
+     if (!confirm('确定要删除这条咨询吗？删除后无法恢复。')) return;
+     writeStorage('legal_consultations', consultations.filter(c => c.id !== consultationId));
+     alert('咨询已删除');
+     renderInteraction();
+   };
+
+   // 删除自己的案件（号主删帖：仅本人可删，跨设备同步）
+   window.deleteCase = function(caseId) {
+     const user = getAuth();
+     if (!user) return;
+     const cases = readStorage('legal_cases', []);
+     const caseItem = cases.find(c => c.id === caseId);
+     if (!caseItem) return;
+     if (caseItem.userId !== user.id) {
+       alert('只能删除自己发布的案件');
+       return;
+     }
+     if (!confirm('确定要删除这个案件吗？删除后无法恢复。')) return;
+     writeStorage('legal_cases', cases.filter(c => c.id !== caseId));
+     alert('案件已删除');
+     renderInteraction();
+   };
+
+   // 删除自己发送的消息（号主删帖：仅发送者可删，双方同步移除）
+   window.deleteMessageItem = function(messageId) {
+     const user = getAuth();
+     if (!user) return;
+     const messages = readStorage('legal_messages', []);
+     const message = messages.find(m => m.id === messageId);
+     if (!message) return;
+     if (message.fromUserId !== user.id) {
+       alert('只能删除自己发送的消息');
+       return;
+     }
+     if (!confirm('确定要删除这条消息吗？删除后无法恢复。')) return;
+     writeStorage('legal_messages', messages.filter(m => m.id !== messageId));
+     alert('消息已删除');
      renderInteraction();
    };
 
@@ -4972,6 +5269,9 @@
     else renderFriendRequests();
   };
 
+  // 交流中心当前激活的侧边栏标签（聊天/好友/通知）：重渲后保持，避免点通知被拉回聊天列表
+  let activeMessagesTab = 'chats';
+
   // 渲染私信页面 - 新设计：左边好友列表，右边聊天内容
   function renderMessages() {
     if (!requireAuth()) return;
@@ -4983,7 +5283,9 @@
     const hidden = new Set(window.chatStorage.getHiddenMessageIds(user.id));
     // 记住当前打开的会话与输入框内容，供重渲后恢复（轮询触发重渲时不打断聊天）
     const prevSessionId = window.currentSessionId;
-    const prevChatInput = (prevSessionId && document.getElementById('chatInput')) ? document.getElementById('chatInput').value : '';
+    const prevInputEl = (prevSessionId && document.getElementById('chatInput')) ? document.getElementById('chatInput') : null;
+    const wasInputFocused = !!prevInputEl && document.activeElement === prevInputEl;
+    const prevChatInput = prevInputEl ? prevInputEl.value : '';
 
     // 根据用户角色显示不同的内容
     let myFriends, unreadNotifications;
@@ -5011,7 +5313,28 @@
         });
       })
       .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
-    
+
+    // 好友未读消息映射：按对方用户ID（无未读时气泡不显示）
+    const sessionUnreadByOther = {};
+    userSessions.forEach(s => {
+      const otherId = s.userId1 === user.id ? s.userId2 : s.userId1;
+      sessionUnreadByOther[otherId] = s.unreadCount;
+    });
+
+    // 记住当前激活的侧边栏标签，重渲后保持（点通知/一键已读触发重渲时不再跳回聊天列表）
+    const activeTab = activeMessagesTab || 'chats';
+
+    // 好友申请当前状态映射：已被处理过的申请在通知里只显示结果状态，不再给出通过/拒绝按钮
+    const friendReqStatusById = {};
+    friends.forEach(f => { if (f.id) friendReqStatusById[f.id] = f.status; });
+    const friendReqActionsHtml = (reqId) => {
+      const st = friendReqStatusById[reqId];
+      if (st === 'accepted') return '<span class="friend-req-status accepted">✓ 已通过</span>';
+      if (st === 'rejected') return '<span class="friend-req-status rejected">✕ 已拒绝</span>';
+      return '<button class="btn success small" onclick="event.stopPropagation(); handleFriendRequest(\'' + reqId + '\', \'accept\')">通过</button>' +
+             '<button class="btn danger small" onclick="event.stopPropagation(); handleFriendRequest(\'' + reqId + '\', \'reject\')">拒绝</button>';
+    };
+
     setApp(html`
       <div class="messages-container-new">
         <!-- 左侧好友列表 -->
@@ -5029,15 +5352,15 @@
           </div>
           
           <div class="sidebar-tabs">
-            <button class="tab-btn active" onclick="switchMessagesTabNew('chats')">
+            <button class="tab-btn ${activeTab === 'chats' ? 'active' : ''}" onclick="switchMessagesTabNew('chats')">
               <span>💬</span> 聊天列表
               ${userSessions.length > 0 ? `<span class="tab-badge">${userSessions.length}</span>` : ''}
             </button>
-            <button class="tab-btn" onclick="switchMessagesTabNew('friends')">
+            <button class="tab-btn ${activeTab === 'friends' ? 'active' : ''}" onclick="switchMessagesTabNew('friends')">
               <span>👥</span> 我的好友
               ${myFriends.length > 0 ? `<span class="tab-badge">${myFriends.length}</span>` : ''}
             </button>
-            <button class="tab-btn" onclick="switchMessagesTabNew('notifications')">
+            <button class="tab-btn ${activeTab === 'notifications' ? 'active' : ''}" onclick="switchMessagesTabNew('notifications')">
               <span>🔔</span> 通知
               ${unreadNotifications.length > 0 ? `<span class="tab-badge unread">${unreadNotifications.length}</span>` : ''}
             </button>
@@ -5051,7 +5374,7 @@
           <!-- 聊天列表内容 -->
           <div class="sidebar-content">
             <!-- 聊天列表 -->
-            <div id="chatsTabNew" class="tab-content active">
+            <div id="chatsTabNew" class="tab-content ${activeTab === 'chats' ? 'active' : ''}">
               <div class="chats-list-new">
                 ${userSessions.length === 0 ? 
                   '<div class="empty-state"><div class="empty-icon">💬</div><p>暂无聊天记录</p><p>添加律师好友开始聊天吧！</p></div>' :
@@ -5086,14 +5409,15 @@
             </div>
             
             <!-- 好友列表 -->
-            <div id="friendsTabNew" class="tab-content">
+            <div id="friendsTabNew" class="tab-content ${activeTab === 'friends' ? 'active' : ''}">
               <div class="friends-list-new">
                 ${myFriends.length === 0 ? 
                   '<div class="empty-state"><div class="empty-icon">👥</div><p>暂无好友</p><p>去律师推广页面添加律师好友吧！</p></div>' :
                   myFriends.map(friend => {
                     const friendName = user.role === 'lawyer' ? friend.userName : friend.lawyerUsername;
                     const friendId = user.role === 'lawyer' ? friend.userId : friend.lawyerId;
-                    
+                    const friendUnread = sessionUnreadByOther[friendId] || 0;
+
                     return html`
                       <div class="friend-item-new" onclick="openChatWithFriend('${friendId}', '${friendName}')">
                         <div class="friend-avatar-new">
@@ -5105,6 +5429,7 @@
                           <div class="friend-status-new">${user.role === 'lawyer' ? '客户' : '律师'}</div>
                         </div>
                         <div class="friend-actions-new">
+                          ${friendUnread > 0 ? `<div class="unread-badge-new">${friendUnread}</div>` : ''}
                           <button class="btn-icon" onclick="event.stopPropagation(); removeFriend('${friend.id}')" title="删除好友">
                             <span>🗑️</span>
                           </button>
@@ -5117,8 +5442,14 @@
             </div>
             
             <!-- 通知中心 -->
-            <div id="notificationsTabNew" class="tab-content">
+            <div id="notificationsTabNew" class="tab-content ${activeTab === 'notifications' ? 'active' : ''}">
               <div class="notifications-list-new">
+                ${unreadNotifications.length > 0 ? `
+                  <div class="notifications-toolbar-new">
+                    <span>${unreadNotifications.length} 条未读通知</span>
+                    <button class="btn secondary small" onclick="markAllNotificationsReadInMessages()">全部标记已读</button>
+                  </div>
+                ` : ''}
                 ${notifications.length === 0 ?
                   '<div class="empty-state"><div class="empty-icon">🔔</div><p>暂无通知</p></div>' :
                   notifications.filter(n => n.toUserId === user.id).map(notification => html`
@@ -5130,10 +5461,7 @@
                         <div class="notification-time-new">${new Date(notification.createdAt).toLocaleString()}</div>
                       </div>
                       <div class="notification-actions-new">
-                        ${notification.type === 'friend_request' && notification.data && notification.data.friendRequestId ? `
-                          <button class="btn success small" onclick="event.stopPropagation(); handleFriendRequest('${notification.data.friendRequestId}', 'accept')">通过</button>
-                          <button class="btn danger small" onclick="event.stopPropagation(); handleFriendRequest('${notification.data.friendRequestId}', 'reject')">拒绝</button>
-                        ` : ''}
+                        ${notification.type === 'friend_request' && notification.data && notification.data.friendRequestId ? friendReqActionsHtml(notification.data.friendRequestId) : ''}
                         ${!notification.read ? '<div class="unread-dot"></div>' : ''}
                       </div>
                     </div>
@@ -5187,7 +5515,7 @@
             
             <div class="chat-window-input">
               <div class="input-container">
-                <input type="text" id="chatInput" placeholder="输入消息..." onkeypress="handleChatKeyPress(event)">
+                <input type="text" id="chatInput" placeholder="输入消息..." onkeydown="handleChatKeyPress(event)">
                 <button class="btn primary" onclick="sendChatMessage()">发送</button>
               </div>
             </div>
@@ -5196,7 +5524,7 @@
       </div>
     `);
 
-    // 若此前打开了会话，重渲后恢复聊天窗口 + 输入内容（轮询/同步触发的重渲不打断聊天）
+    // 若此前打开了会话，重渲后恢复聊天窗口 + 输入内容 + 焦点（轮询/同步触发的重渲不打断聊天）
     if (prevSessionId) {
       const session = sessions.find(s => s.id === prevSessionId);
       if (session) {
@@ -5204,6 +5532,12 @@
         openChatWindow(prevSessionId, otherName);
         const input = document.getElementById('chatInput');
         if (input && prevChatInput) input.value = prevChatInput;
+        // 重渲前输入框正处于焦点：恢复焦点并把光标移到末尾，避免打字被打断
+        if (input && wasInputFocused) {
+          input.focus();
+          const end = input.value.length;
+          input.setSelectionRange(end, end);
+        }
       }
     }
   }
@@ -5221,6 +5555,8 @@
 
   // 新的标签页切换函数
   window.switchMessagesTabNew = function(tabName) {
+    // 记录当前标签，供 renderMessages 重渲后恢复
+    activeMessagesTab = tabName;
     // 移除所有活动状态
     document.querySelectorAll('.sidebar-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.sidebar-content .tab-content').forEach(content => content.classList.remove('active'));
@@ -5260,10 +5596,18 @@
 
     // 设置当前会话ID
     window.currentSessionId = sessionId;
-    
+
     // 更新聊天项选中状态
     document.querySelectorAll('.chat-item-new').forEach(item => item.classList.remove('active'));
     document.querySelector(`[data-session-id="${sessionId}"]`).classList.add('active');
+
+    // 打开即重渲：立即清掉该会话的未读气泡，无需等 5s 轮询。
+    // 守卫防重入：renderMessages 的会话恢复路径会再次调 openChatWindow，此时跳过重渲。
+    if (!window.__khChatRerenderGuard) {
+      window.__khChatRerenderGuard = true;
+      renderMessages();
+      window.__khChatRerenderGuard = false;
+    }
   };
 
   // 与好友开始聊天
@@ -5486,8 +5830,14 @@
   window.handleNotificationClick = function(notificationId) {
     // 标记通知为已读
     window.chatStorage.markNotificationRead(notificationId);
-    
+
     // 刷新页面
+    renderMessages();
+  };
+
+  // 交流中心通知一键全部已读：标完即刷新当前页，未读提示随之消失
+  window.markAllNotificationsReadInMessages = function() {
+    window.chatStorage.markAllNotificationsRead();
     renderMessages();
   };
 
@@ -5843,7 +6193,7 @@
         </div>
         
         <div class="chat-input">
-          <input type="text" id="chatInput" placeholder="输入消息..." onkeypress="handleChatKeyPress(event, '${sessionId}')">
+          <input type="text" id="chatInput" placeholder="输入消息..." onkeydown="handleChatKeyPress(event, '${sessionId}')">
           <button class="btn primary" onclick="sendMessage('${sessionId}')">发送</button>
         </div>
       </div>
@@ -5883,10 +6233,13 @@
     renderChat(sessionId);
   };
 
-  // 处理聊天输入框回车
+  // 处理聊天输入框回车（onkeydown：中文输入法组合中回车是确认候选词，不发送）
   window.handleChatKeyPress = function(event, sessionId) {
+    if (event.isComposing || event.keyCode === 229) return;   // IME 组合中按回车只是选字，不发送
     if (event.key === 'Enter') {
-      sendMessage(sessionId);
+      event.preventDefault();
+      if (sessionId) sendMessage(sessionId);   // 旧版聊天页（renderChat）
+      else sendChatMessage();                  // 交流中心（用 currentSessionId）
     }
   };
 
@@ -6171,38 +6524,7 @@
 
   function renderHome() {
     const user = getAuth();
-    if (!user || !user.username) {
-      // 显示登录提示页面
-      setApp(html`
-        <div class="login-prompt-container">
-          <div class="login-prompt-card">
-            <div class="login-prompt-header">
-              <h1>欢迎来到KnowHow</h1>
-              <p>法律内容与服务平台</p>
-            </div>
-            <div class="login-prompt-content">
-              <div class="login-prompt-minimal">
-                <p class="login-prompt-slogan">登录后即可开始使用。</p>
-              </div>
-              <div class="login-prompt-actions">
-                <button class="btn primary large" onclick="showAuthModal('login')">
-                  立即登录
-                </button>
-                <button class="btn secondary large" onclick="showAuthModal('register')">
-                  注册账号
-                </button>
-              </div>
-              <details class="login-prompt-demo login-prompt-demo-bottom">
-                <summary>测试账号（仅体验）</summary>
-                <div class="small">管理员 <span class="kbd">admin</span>/<span class="kbd">admin123</span> · 律师 <span class="kbd">lawyer</span>/<span class="kbd">123456</span> · 用户 <span class="kbd">user</span>/<span class="kbd">123456</span></div>
-              </details>
-            </div>
-          </div>
-        </div>
-      `);
-      return;
-    }
-    
+
     // 获取统计数据
     const films = readStorage(STORAGE_KEYS.films, []);
     const news = readStorage(STORAGE_KEYS.news, []);
@@ -6212,18 +6534,35 @@
     const lawUpdates = readStorage(STORAGE_KEYS.lawUpdates, []);
     const lawyers = readStorage(STORAGE_KEYS.lawyers, []);
     
-    // 获取最新动态
-    const recentPosts = forum.slice().sort((a,b) => b.createdAt - a.createdAt).slice(0, 3);
-    const recentNews = news.slice().sort((a,b) => b.date.localeCompare(a.date)).slice(0, 2);
-    const weeklyNews = news.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
-    const weeklyLawUpdates = lawUpdates.slice().sort((a, b) => (b.effectiveDate || '').localeCompare(a.effectiveDate || '')).slice(0, 3);
+    // 政务首页派生数据
+    const sortedNews = news.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const carouselNews = sortedNews.slice(0, 5);
+    const newsList = sortedNews.slice(0, 8);
+    const recentPosts = forum.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
+    const notices = community.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 4);
+    const weeklyLawUpdates = lawUpdates.slice().sort((a, b) => (b.effectiveDate || '').localeCompare(a.effectiveDate || '')).slice(0, 4);
     const recommendFilms = films.slice(0, 3);
     const recommendLawyers = lawyers.slice(0, 3);
+    const govStats = [
+      { num: news.length, label: '法治要闻' },
+      { num: forum.length, label: '论坛讨论' },
+      { num: lawyers.length, label: '入驻律师' },
+      { num: qa.length, label: '法律问答' }
+    ];
+    // 轮播兜底图池：法治主题（法庭 / 法槌 / 法律文书 / 法典），无封面新闻回退；有封面优先用新闻自带图
+    const GOV_LEGAL_IMGS = [
+      'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=70',
+      'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=70',
+      'https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=70',
+      'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=70',
+      'https://images.unsplash.com/photo-1589391886645-d51941baf7fb?auto=format&fit=crop&w=1200&q=70'
+    ];
+    const HOME_FALLBACK_IMG = GOV_LEGAL_IMGS[0];
     
     setApp(html`
-      <div class="home-container">
-        <!-- 欢迎横幅 -->
-        <section class="hero-section">
+      <div class="home-container gov-home">
+        <!-- 平台欢迎横幅（原 KnowHow 板块，保留） -->
+        <section class="hero-section" aria-label="平台欢迎">
           <div class="hero-content">
             <h1 class="hero-title">KnowHow平台</h1>
             <p class="hero-subtitle">聚焦普法传播与法律服务，构建法治社会新生态</p>
@@ -6232,201 +6571,156 @@
           </div>
         </section>
 
-        <!-- 功能模块 -->
-        <section class="modules-section">
-          <h2 class="section-title">功能模块</h2>
-          <div class="grid cols-3">
+        <!-- 热点头条焦点轮播 -->
+        <section class="gov-hero-carousel" id="govHeroCarousel" aria-roledescription="轮播" aria-label="热点头条">
+          ${carouselNews.map((n, i) => html`
+            <div class="gov-hero-slide${i === 0 ? ' is-active' : ''}" onclick="showHomeNewsDetail('${n.id}')" role="group" aria-roledescription="slide" aria-label="第 ${i + 1} 张，共 ${carouselNews.length} 张">
+              <img class="gov-hero-img" src="${n.img || GOV_LEGAL_IMGS[i % GOV_LEGAL_IMGS.length]}" alt="${escapeHtml(n.title)}" loading="${i === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null;this.src='${HOME_FALLBACK_IMG}'">
+              <div class="gov-hero-mask"></div>
+              <div class="gov-hero-caption">
+                <span class="gov-hero-kicker">法治头条 · 焦点</span>
+                <h2 class="gov-hero-title">${escapeHtml(n.title)}</h2>
+                <div class="gov-hero-meta">
+                  <span class="gov-hero-date">${escapeHtml(n.date)}</span>
+                  ${n.sourceName ? `<span class="gov-hero-source">📰 ${escapeHtml(n.sourceName)}</span>` : ''}
+                </div>
+                ${(n.tags || []).length ? `<div class="gov-hero-tags">${n.tags.slice(0, 3).map(t => `<span class="gov-hero-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+                <p class="gov-hero-summary">${escapeHtml((n.summary || '').slice(0, 80))}…</p>
+              </div>
+            </div>
+          `).join('')}
+          ${carouselNews.length > 1 ? html`
+            <button class="gov-hero-arrow prev" onclick="window.govCarouselGo(-1)" aria-label="上一张">‹</button>
+            <button class="gov-hero-arrow next" onclick="window.govCarouselGo(1)" aria-label="下一张">›</button>
+            <div class="gov-hero-dots">
+              ${carouselNews.map((n, i) => `<button class="gov-hero-dot${i === 0 ? ' is-active' : ''}" onclick="window.govCarouselGoTo(${i})" aria-label="第 ${i + 1} 张"></button>`).join('')}
+            </div>
+          ` : ''}
+        </section>
+
+        <!-- 服务大厅 -->
+        <section class="gov-services" aria-label="服务大厅">
+          <div class="gov-sec-head">
+            <h2 class="gov-sec-title">服务大厅</h2>
+          </div>
+          <div class="gov-services-grid">
             ${[
-              { href: '#/films', title: '影视中心', desc: '普法课堂 · 民法典', badge: '影视', color: '#e03131' },
-              { href: '#/news', title: '法治头条', desc: '头条速递 · 政策热点', badge: '头条', color: '#f0c860' },
-              { href: '#/forum', title: '法律论坛', desc: '专业讨论 · 经验分享', badge: '论坛', color: '#ffb84d' },
-              { href: '#/law-updates', title: '民法典', desc: '在线阅读 · 法条速查', badge: '法典', color: '#e8b64c' },
-              { href: '#/lawyers', title: '律师服务', desc: '专业律师 · 服务展示', badge: '律师', color: '#e8b64c' },
-              { href: '#/interaction', title: '法律互动', desc: '在线咨询 · 案件对接', badge: '互动', color: '#ff6b6b' },
-              { href: '#/messages', title: '私信中心', desc: '与律师直接沟通交流', badge: '私信', color: '#f0d58a' },
-              { href: '#/lawyer-portal', title: '律师工作台', desc: '专业案件管理平台', badge: '工作', color: '#ff8a5c' },
-            ].map(x => html`
-              ${x.onclick ? 
-                `<div class="module-card" onclick="${x.onclick}" style="--accent-color: ${x.color}; cursor: pointer;">
-                  <div class="module-icon">${x.badge}</div>
-                  <div class="module-content">
-                    <div class="module-title">${x.title}</div>
-                    <div class="module-desc">${x.desc}</div>
-                  </div>
-                  <div class="module-arrow">→</div>
-                </div>` :
-                `<a class="module-card" href="${x.href}" style="--accent-color: ${x.color}">
-                  <div class="module-icon">${x.badge}</div>
-                  <div class="module-content">
-                    <div class="module-title">${x.title}</div>
-                    <div class="module-desc">${x.desc}</div>
-                  </div>
-                  <div class="module-arrow">→</div>
-                </a>`
-              }
-            `).join('')}
+              { href: '#/films', badge: '影视', name: '影视中心' },
+              { href: '#/news', badge: '头条', name: '法治头条' },
+              { href: '#/law-updates', badge: '法典', name: '民法典' },
+              { href: '#/forum', badge: '论坛', name: '法律论坛' },
+              { href: '#/lawyers', badge: '律师', name: '律师服务' },
+              { href: '#/interaction', badge: '互动', name: '法律互动' },
+              { href: '#/messages', badge: '私信', name: '私信中心' },
+              { href: '#/lawyer-portal', badge: '工作', name: '律师工作台', lawyerOnly: true },
+            ].filter(x => !x.lawyerOnly || (user && (user.role === 'lawyer' || user.role === 'admin')))
+            .map(x => `<a class="gov-service-tile" href="${x.href}"><span class="gov-service-icon">${x.badge}</span><span class="gov-service-name">${x.name}</span></a>`).join('')}
           </div>
         </section>
 
-        <!-- 新手引导 -->
-        <section class="section onboarding-section">
-          <h2 class="section-title">新手引导</h2>
-          <div class="grid cols-3">
-            <div class="card onboarding-card">
-              <h3>第一步：浏览内容</h3>
-              <p class="small">从法治头条和影视中心快速了解近期重点法律议题。</p>
-              <a href="#/news" class="btn secondary">进入法治头条</a>
-            </div>
-            <div class="card onboarding-card">
-              <h3>第二步：发起咨询</h3>
-              <p class="small">在法律互动模块提交问题，获取结构化处理建议。</p>
-              <a href="#/interaction" class="btn secondary">进入法律互动</a>
-            </div>
-            <div class="card onboarding-card">
-              <h3>第三步：联系律师</h3>
-              <p class="small">按业务领域筛选律师，建立进一步服务沟通。</p>
-              <a href="#/lawyers" class="btn secondary">进入律师服务</a>
-            </div>
-          </div>
-        </section>
-
-        <section class="section humane-section">
-          <h2 class="section-title">求助支持</h2>
-          <div class="grid cols-3 humane-grid">
-            <div class="card humane-card">
-              <h3>先稳定，再处理</h3>
-              <p class="small">遇到法律问题时，先保存证据、记录时间线，再进入咨询流程，能更快得到有效建议。</p>
-            </div>
-            <div class="card humane-card">
-              <h3>不必一次说完</h3>
-              <p class="small">如果你现在很焦虑，可以先描述最核心的困扰，后续再逐步补充细节。</p>
-            </div>
-            <div class="card humane-card">
-              <h3>你不是一个人</h3>
-              <p class="small">平台提供内容、讨论和律师服务三层支持，帮助你从慌乱走向有方向。</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- 最新动态 -->
-        <section class="activity-section">
-          <h2 class="section-title">最新动态</h2>
-          <div class="grid cols-2">
-            <div class="activity-card">
-              <h3>最新论坛讨论</h3>
-              <div class="activity-list">
-                ${recentPosts.length > 0 ? recentPosts.map(post => html`
-                  <div class="activity-item">
-                    <div class="activity-title">${escapeHtml(post.title)}</div>
-                    <div class="activity-meta">${new Date(post.createdAt).toLocaleDateString()} · ${(post.replies||[]).length} 回复</div>
-                  </div>
-                `).join('') : '<div class="empty">暂无讨论</div>'}
+        <!-- 主信息区两栏 -->
+        <div class="gov-columns">
+          <div class="gov-main-col">
+            <!-- 法治要闻 -->
+            <section class="gov-section gov-news-list">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">法治要闻</h2>
+                <a class="gov-sec-more" href="#/news">更多 →</a>
               </div>
-            </div>
-            <div class="activity-card">
-              <h3>最新法治头条</h3>
-              <div class="activity-list">
-                ${recentNews.length > 0 ? recentNews.map(item => html`
-                  <div class="activity-item">
-                    <div class="activity-title">${escapeHtml(item.title)}</div>
-                    <div class="activity-meta">${item.date} · ${escapeHtml((item.tags||[]).join('、') || '—')}</div>
-                  </div>
-                `).join('') : '<div class="empty">暂无要闻</div>'}
-              </div>
-            </div>
-          </div>
-        </section>
+              ${newsList.length > 0 ? newsList.map(n => html`
+                <div class="gov-news-item" onclick="showHomeNewsDetail('${n.id}')">
+                  <span class="gov-news-date">${escapeHtml(n.date)}</span>
+                  <span class="gov-news-title">${escapeHtml(n.title)}</span>
+                  ${(n.tags || []).length ? `<span class="gov-news-tag">${escapeHtml(n.tags[0])}</span>` : ''}
+                </div>
+              `).join('') : '<div class="gov-empty">暂无要闻</div>'}
+            </section>
 
-        <!-- 本周更新 -->
-        <section class="section weekly-section">
-          <h2 class="section-title">本周更新</h2>
-          <div class="grid cols-2">
-            <div class="card">
-              <h3>重点要闻</h3>
-              <div class="list">
-                ${weeklyNews.map(item => html`
-                  <div class="list-item">
-                    <div class="title">${escapeHtml(item.title)}</div>
-                    <div class="meta">${item.date} · ${escapeHtml((item.tags || []).join('、') || '综合')}</div>
-                  </div>
-                `).join('') || '<div class="empty">暂无更新</div>'}
+            <!-- 法规动态 -->
+            <section class="gov-section gov-laws">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">法规动态</h2>
               </div>
-            </div>
-            <div class="card">
-              <h3>法规动态</h3>
-              <div class="list">
-                ${weeklyLawUpdates.map(item => html`
-                  <div class="list-item">
-                    <div class="title">${escapeHtml(item.name)}</div>
-                    <div class="meta">生效日期：${escapeHtml(item.effectiveDate || '待更新')}</div>
-                  </div>
-                `).join('') || '<div class="empty">暂无更新</div>'}
-              </div>
-            </div>
-          </div>
-        </section>
+              ${weeklyLawUpdates.length > 0 ? weeklyLawUpdates.map(item => html`
+                <div class="gov-law-item">
+                  <span class="gov-law-name">${escapeHtml(item.name)}</span>
+                  <span class="gov-law-date">${escapeHtml(item.effectiveDate || '待更新')} 生效</span>
+                </div>
+              `).join('') : '<div class="gov-empty">暂无法规动态</div>'}
+            </section>
 
-        <!-- 推荐内容 -->
-        <section class="section recommend-section">
-          <h2 class="section-title">推荐内容</h2>
-          <div class="grid cols-2">
-            <div class="card">
-              <h3>推荐视频</h3>
-              <div class="list">
-                ${recommendFilms.map(item => html`
-                  <div class="list-item">
-                    <div class="title">${escapeHtml(item.title)}</div>
-                    <div class="meta">${escapeHtml(item.category)} · ${escapeHtml(item.duration || '时长待更新')}</div>
-                  </div>
-                `).join('') || '<div class="empty">暂无推荐</div>'}
+            <!-- 推荐内容 -->
+            <section class="gov-section gov-recommend">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">推荐内容</h2>
               </div>
-            </div>
-            <div class="card">
-              <h3>推荐律师</h3>
-              <div class="list">
-                ${recommendLawyers.map(item => html`
-                  <div class="list-item">
-                    <div class="title">${escapeHtml(item.name)}</div>
-                    <div class="meta">${escapeHtml(item.firm || '机构信息待更新')} · ${escapeHtml((item.areas || []).slice(0, 2).join(' / ') || '综合服务')}</div>
-                  </div>
-                `).join('') || '<div class="empty">暂无推荐</div>'}
+              <div class="gov-recommend-grid">
+                ${recommendFilms.map(item => `<a class="gov-recommend-card" href="#/films"><span class="gov-recommend-cat">视频</span><span class="gov-recommend-name">${escapeHtml(item.title)}</span><small>${escapeHtml(item.category || '')} · ${escapeHtml(item.duration || '')}</small></a>`).join('')}
+                ${recommendLawyers.map(item => `<a class="gov-recommend-card" href="#/lawyers"><span class="gov-recommend-cat">律师</span><span class="gov-recommend-name">${escapeHtml(item.name)}</span><small>${escapeHtml(item.firm || '')} · ${escapeHtml((item.areas || []).slice(0, 2).join(' / '))}</small></a>`).join('')}
               </div>
-            </div>
+            </section>
           </div>
-        </section>
 
-        <!-- 平台亮点 -->
-        <section class="section">
-          <h2 class="section-title">平台亮点</h2>
-          <div class="grid cols-3">
-            <div class="card">
-              <h3>法律内容全链路</h3>
-              <p class="small">覆盖“普法内容生产—热点解读—互动问答—律师服务”完整闭环。</p>
-            </div>
-            <div class="card">
-              <h3>运营分析可视化</h3>
-              <p class="small">内置运营分析看板，支持多指标展示与内容表现排行分析。</p>
-            </div>
-            <div class="card">
-              <h3>多角色协同</h3>
-              <p class="small">支持用户、律师、管理员三端协同，满足真实平台场景模拟。</p>
-            </div>
-          </div>
-        </section>
+          <aside class="gov-side-col">
+            <!-- 平台公告 -->
+            <section class="gov-section gov-announce">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">平台公告</h2>
+              </div>
+              ${notices.length > 0 ? notices.map(item => `<div class="gov-announce-item"><span class="gov-announce-text">${escapeHtml(item.text)}</span>${(item.tags || []).length ? `<span class="gov-announce-tag">${escapeHtml(item.tags[0])}</span>` : ''}</div>`).join('') : '<div class="gov-empty">暂无公告</div>'}
+            </section>
 
-        <!-- 快速操作 -->
-        <section class="quick-actions">
-          <h2 class="section-title">快速操作</h2>
-          <div class="action-buttons">
-            <a href="#/forum" class="action-btn primary">发布讨论</a>
-            <a href="#/interaction" class="action-btn secondary">发起咨询</a>
-            <a href="#/interaction" class="action-btn secondary">查看互动</a>
-            <a href="#/lawyers" class="action-btn secondary">查找律师</a>
-          </div>
-        </section>
+            <!-- 数据概览 -->
+            <section class="gov-section gov-stats">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">数据概览</h2>
+              </div>
+              <div class="gov-stats-grid">
+                ${govStats.map(s => `<div class="gov-stat"><div class="gov-stat-num">${s.num}</div><div class="gov-stat-label">${s.label}</div></div>`).join('')}
+              </div>
+            </section>
+
+            <!-- 最新讨论 -->
+            <section class="gov-section gov-forum-feed">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">最新讨论</h2>
+              </div>
+              ${recentPosts.length > 0 ? recentPosts.map(post => `<a class="gov-forum-item" href="#/forum"><span class="gov-forum-title">${escapeHtml(post.title)}</span><small>${new Date(post.createdAt).toLocaleDateString()} · ${(post.replies || []).length} 回复</small></a>`).join('') : '<div class="gov-empty">暂无讨论</div>'}
+            </section>
+
+            <!-- 求助支持 -->
+            <section class="gov-section gov-help">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">求助支持</h2>
+              </div>
+              <div class="gov-help-card">先稳定，再处理——保存证据、记录时间线，再进入咨询流程。</div>
+              <div class="gov-help-card">不必一次说完——可以先描述最核心的困扰，再逐步补充细节。</div>
+              <div class="gov-help-card">你不是一个人——平台提供内容、讨论与律师服务三层支持。</div>
+            </section>
+
+            <!-- 快速操作 + 游客引导 -->
+            <section class="gov-section gov-actions">
+              <div class="gov-sec-head">
+                <h2 class="gov-sec-title">快速操作</h2>
+              </div>
+              <div class="action-buttons">
+                <a href="#/forum" class="action-btn primary">发布讨论</a>
+                <a href="#/interaction" class="action-btn secondary">发起咨询</a>
+                <a href="#/lawyers" class="action-btn secondary">查找律师</a>
+              </div>
+              ${user && user.username ? '' : html`
+                <div class="gov-guest-cta">
+                  <span>登录后可发布讨论、发起咨询、与律师沟通</span>
+                  <button class="action-btn primary" onclick="showAuthModal('login')">立即登录</button>
+                  <button class="action-btn secondary" onclick="showAuthModal('register')">注册账号</button>
+                </div>
+              `}
+            </section>
+          </aside>
+        </div>
       </div>
     `);
-    initHomeHeroMotion();
+    initGovHeroCarousel();
   }
 
   function renderFilms() {
@@ -6448,34 +6742,26 @@
     const getFilmFallbackSvg = (film) => {
       const themeByCategory = {
         '普法课堂': {
-          bgA: '#0e2848',
-          bgB: '#1f4f8a',
-          glow: '#25d0ff',
-          badge: '普法课堂',
-          icon: '⚖'
+          bgA: '#14324f', bgB: '#07141f', glow: '#2f7fb8', accent: '#35a8e0',
+          badge: '普法课堂', icon: '⚖'
         },
         '民法典': {
-          bgA: '#2a1420',
-          bgB: '#7a2433',
-          glow: '#ff8a5c',
-          badge: '民法典',
-          icon: '📖'
+          bgA: '#4a1f2a', bgB: '#160a0e', glow: '#c96a4a', accent: '#e89a6a',
+          badge: '民法典', icon: '📖'
         }
       };
 
       const theme = themeByCategory[film.category] || {
-        bgA: '#202a46',
-        bgB: '#3c4a79',
-        glow: '#8d7bff',
-        badge: '精选内容',
-        icon: '📘'
+        bgA: '#23314a', bgB: '#0d131f', glow: '#5f6f9e', accent: '#8d9bff',
+        badge: '精选内容', icon: '📘'
       };
 
-      const safeTitle = String(film.title || '精彩内容').slice(0, 24);
+      const safeTitle = String(film.title || '精彩内容').slice(0, 26);
       const safeCategory = String(film.category || '影视专题');
       const safeDuration = String(film.duration || '时长待更新');
-      const safeTagline = String(getFilmPersona(film).tagline).slice(0, 22);
+      const safeTagline = String(getFilmPersona(film).tagline).slice(0, 20);
 
+      // 视频内容片段 + 字幕文字风格：暗调场景、居中播放钮、底部标题字幕栏（替代原网格+大图标）
       const svg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
           <defs>
@@ -6483,23 +6769,34 @@
               <stop offset="0%" stop-color="${theme.bgA}" />
               <stop offset="100%" stop-color="${theme.bgB}" />
             </linearGradient>
-            <radialGradient id="halo" cx="0.2" cy="0.15" r="0.9">
-              <stop offset="0%" stop-color="${theme.glow}" stop-opacity="0.35" />
-              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            <radialGradient id="scene" cx="0.5" cy="0.38" r="0.8">
+              <stop offset="0%" stop-color="${theme.glow}" stop-opacity="0.45" />
+              <stop offset="55%" stop-color="#0a1522" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0.75" />
             </radialGradient>
+            <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#000000" stop-opacity="0" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0.85" />
+            </linearGradient>
           </defs>
           <rect width="960" height="540" fill="url(#bg)" />
-          <rect width="960" height="540" fill="url(#halo)" />
-          <g opacity="0.15" stroke="#ffffff">
-            <path d="M0 90 H960 M0 180 H960 M0 270 H960 M0 360 H960 M0 450 H960" />
-            <path d="M120 0 V540 M240 0 V540 M360 0 V540 M480 0 V540 M600 0 V540 M720 0 V540 M840 0 V540" />
+          <rect width="960" height="540" fill="url(#scene)" />
+          <rect width="960" height="540" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3" />
+          <g opacity="0.5" fill="#ffffff">
+            <circle cx="170" cy="120" r="3" /><circle cx="192" cy="118" r="2" />
+            <circle cx="800" cy="90" r="3" /><circle cx="822" cy="96" r="2" />
+            <circle cx="240" cy="424" r="2" /><circle cx="722" cy="430" r="3" />
           </g>
-          <rect x="42" y="40" rx="12" ry="12" width="154" height="44" fill="#000000" fill-opacity="0.33" />
-          <text x="60" y="70" fill="#dff7ff" font-size="22" font-family="Segoe UI, Microsoft YaHei, sans-serif">${theme.badge}</text>
-          <text x="62" y="470" fill="#ffffff" font-size="52" font-weight="700" font-family="Segoe UI, Microsoft YaHei, sans-serif">${safeTitle}</text>
-          <text x="64" y="514" fill="#dbeafe" font-size="24" font-family="Segoe UI, Microsoft YaHei, sans-serif">${safeCategory} · ${safeDuration} · ${safeTagline}</text>
-          <circle cx="830" cy="115" r="86" fill="#000000" fill-opacity="0.2" />
-          <text x="792" y="133" fill="#ffffff" font-size="56" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">${theme.icon}</text>
+          <rect x="42" y="38" rx="14" ry="14" width="158" height="46" fill="#000000" fill-opacity="0.38" />
+          <rect x="42" y="38" rx="14" ry="14" width="158" height="46" fill="none" stroke="${theme.accent}" stroke-opacity="0.55" stroke-width="1.5" />
+          <text x="62" y="69" fill="#eaf6ff" font-size="21" font-family="Segoe UI, Microsoft YaHei, sans-serif">${theme.badge}</text>
+          <circle cx="480" cy="258" r="54" fill="#000000" fill-opacity="0.45" stroke="#ffffff" stroke-opacity="0.85" stroke-width="3" />
+          <polygon points="464,232 464,284 510,258" fill="#ffffff" />
+          <rect x="0" y="386" width="960" height="154" fill="url(#bar)" />
+          <text x="46" y="466" fill="#ffffff" font-size="46" font-weight="700" font-family="Segoe UI, Microsoft YaHei, sans-serif">${safeTitle}</text>
+          <text x="48" y="508" fill="#cfe2f5" font-size="23" font-family="Segoe UI, Microsoft YaHei, sans-serif">${safeDuration} · ${safeCategory} · ${safeTagline}</text>
+          <circle cx="890" cy="424" r="30" fill="#000000" fill-opacity="0.4" />
+          <text x="868" y="435" fill="#ffffff" font-size="24" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">${theme.icon}</text>
         </svg>
       `.trim();
 
@@ -6582,7 +6879,7 @@
 
     setApp(html`
       <div class="films-page">
-        <div class="films-header">
+        <div class="films-header hero-banner" style="--banner:url('${legalBannerFor('films')}');">
           <div class="header-content">
             <h1>影视中心</h1>
             <p class="header-subtitle">普法课堂 · 民法典，全部可播放的法治视频</p>
@@ -7202,7 +7499,7 @@
 
     setApp(html`
       <div class="news-page">
-        <div class="news-header">
+        <div class="news-header hero-banner" style="--banner:url('${legalBannerFor('news')}');">
           <div class="header-content">
             <h1>法治头条</h1>
             <p class="news-subtitle">头条速递 · 政策解读 · 法治热点</p>
@@ -7476,14 +7773,25 @@
     let currentFilter = 'all';
     let currentSort = 'date';
 
-    const getForumCover = (p) => {
-      const text = `${p.title || ''} ${p.content || ''}`.toLowerCase();
-      const pools = text.includes('合同') ? ['contract,discussion,documents,desk', 'office,law,meeting,paperwork']
-        : text.includes('劳动') ? ['workplace,team,office,discussion', 'employee,meeting,city,work']
-        : ['community,conversation,people,city', 'discussion,group,meeting,cafe'];
-      return pickThemedPhoto(`forum-${p.id}-${p.title}`, pools, '640/300');
-    };
+    const getForumThumb = (p) => legalThumbFor(`forum-${p.id}-${p.title}`);
     const getPostAuthor = (p) => p.author || `网友${String(p.id || '').slice(-4) || '用户'}`;
+    // 列表摘要：正文截断
+    const summaryOf = (p, max = 96) => {
+      const raw = String(p.content || '');
+      return raw.length > max ? raw.slice(0, max) + '…' : raw;
+    };
+    // 相对时间
+    const timeAgoForum = (ts) => {
+      const t = Number(ts) || Date.now();
+      const m = Math.floor((Date.now() - t) / 60000);
+      if (m < 1) return '刚刚';
+      if (m < 60) return m + ' 分钟前';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + ' 小时前';
+      const d = Math.floor(h / 24);
+      if (d < 30) return d + ' 天前';
+      return new Date(ts).toLocaleDateString();
+    };
 
     // 封面兜底：loremflickr 加载失败时回退到本地生成的 SVG 横幅（带帖子标题）
     const getForumFallbackSvg = (p) => {
@@ -7530,19 +7838,16 @@
     const whoLikes = (authForForum && authForForum.username) || '匿名用户';
     const myLikes = new Set(JSON.parse(localStorage.getItem(`kh_forum_likes_${whoLikes}`) || '[]'));
 
-    // 展开全部回复的状态（跨重绘保留）
-    window.forumExpanded = window.forumExpanded || new Set();
-
     const renderForumList = (keyword = '', filter = 'all', sort = 'date') => {
       let filtered = all.filter(p => {
-        const matchesKeyword = !keyword || 
-          p.title.toLowerCase().includes(keyword.toLowerCase()) || 
+        const matchesKeyword = !keyword ||
+          p.title.toLowerCase().includes(keyword.toLowerCase()) ||
           p.content.toLowerCase().includes(keyword.toLowerCase());
-        
-        const matchesFilter = filter === 'all' || 
+
+        const matchesFilter = filter === 'all' ||
           (filter === 'recent' && new Date(p.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) ||
           (filter === 'popular' && (p.replies||[]).length > 2);
-        
+
         return matchesKeyword && matchesFilter;
       });
 
@@ -7559,84 +7864,112 @@
           break;
       }
 
+      // 知乎式紧凑列表：标题 + 摘要 + 作者/时间/互动数，小缩略图靠右；点整卡进详情
       return filtered.map(p => {
-        markViewed(p.id);
         const me = getAuth();
         const isAdmin = !!(me && (me.role === 'admin' || me.role === 'superadmin'));
         const postAuthor = getPostAuthor(p);
         const canManage = isAdmin || (me && postAuthor === me.username);
-        const isEditing = window.forumEditId === p.id;
-        const repliesAll = p.replies || [];
-        const repliesOpen = !!(window.forumExpanded && window.forumExpanded.has(p.id));
-        const shownReplies = repliesOpen ? repliesAll : repliesAll.slice(-3);
         return html`
-        <div class="forum-post">
-          <div class="forum-post-media">
-            <img class="forum-post-img" src="${getForumCover(p)}" data-fallback="${getForumFallbackSvg(p)}" alt="${escapeHtml(p.title)}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback;">
-          </div>
-          <div class="forum-post-header">
-            <div class="forum-post-title">${escapeHtml(p.title)}</div>
-            <div class="forum-post-actions">
-              ${canManage && !isEditing ? html`
+        <div class="forum-item" onclick="openForumPost('${p.id}')" role="button" tabindex="0">
+          <div class="forum-item-main">
+            <div class="forum-item-head">
+              <h3 class="forum-item-title">${escapeHtml(p.title)}</h3>
+              ${canManage ? html`<div class="forum-item-actions" onclick="event.stopPropagation()">
                 <button class="btn secondary small" onclick="editPost('${p.id}')">编辑</button>
                 <button class="btn danger small" onclick="deletePost('${p.id}')">删除</button>
-              ` : ''}
+              </div>` : ''}
+            </div>
+            <p class="forum-item-summary">${escapeHtml(summaryOf(p))}</p>
+            <div class="forum-item-meta">
+              <span class="forum-item-author"><span class="forum-author-avatar">${escapeHtml(initialOf(getPostAuthor(p)))}</span>${escapeHtml(getPostAuthor(p))}</span>
+              <span>${timeAgoForum(p.createdAt)}</span>
+              <span>💬 ${(p.replies||[]).length}</span>
+              <span>👀 ${p.views || 0}</span>
+              <span>👍 ${p.likes || 0}</span>
             </div>
           </div>
-          <div class="forum-post-meta">
-            <span class="forum-author-avatar">${escapeHtml(initialOf(getPostAuthor(p)))}</span>
-            <span class="forum-author-name">${escapeHtml(getPostAuthor(p))}</span>
-            <span>发表于 ${new Date(p.createdAt).toLocaleString()}</span>
+          <div class="forum-item-thumb">
+            <img src="${getForumThumb(p)}" data-fallback="${getForumFallbackSvg(p)}" alt="" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback;">
           </div>
-          ${isEditing ? html`
-            <form class="forum-new-post-form" onsubmit="return savePostEdit('${p.id}', this)">
-              <label>帖子标题</label>
-              <input name="title" value="${escapeHtml(p.title)}" required>
-              <label>帖子内容</label>
-              <textarea name="content" required>${escapeHtml(p.content)}</textarea>
-              <div class="form-actions">
-                <button class="btn secondary" type="button" onclick="cancelPostEdit()">取消</button>
-                <button class="btn primary" type="submit">保存修改</button>
-              </div>
-            </form>
-          ` : html`<div class="forum-post-content">${escapeHtml(p.content)}</div>`}
-          <div class="forum-post-footer">
-            <div class="forum-post-stats">
-              <span>💬 ${(p.replies||[]).length} 条回复</span>
-              <span>👀 ${p.views || 0} 次查看</span>
-              <span>👍 ${p.likes || 0} 个赞</span>
-          </div>
-            <div class="forum-replies">
-              ${shownReplies.map(r => html`
-                <div class="forum-reply">
-                  <div class="forum-reply-content">${escapeHtml(r.text||r.content)}</div>
-                  <div class="forum-reply-meta">
-                    <span class="forum-reply-author">${escapeHtml(r.author || '热心网友')}</span>
-                    <span>${new Date(r.createdAt).toLocaleString()}</span>
-                    <div class="forum-reply-actions">
-                      <button class="btn secondary small${myLikes.has(p.id + '::' + r.id) ? ' liked' : ''}" onclick="likeReply('${p.id}', '${r.id}')" title="${myLikes.has(p.id + '::' + r.id) ? '取消赞' : '点赞'}">👍 ${r.likes || 0}</button>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-              ${repliesAll.length > 3 ? html`<button class="btn secondary small forum-reply-expand" onclick="expandReplies('${p.id}')">${repliesOpen ? '收起回复' : '展开全部 ' + repliesAll.length + ' 条回复'}</button>` : ''}
-            </div>
-            <form class="forum-reply-form" data-id="${p.id}">
-              <label>回复</label>
-            <input name="reply" placeholder="写下你的看法..." required>
-              <div class="form-actions">
-                <button class="btn primary" type="submit">提交回复</button>
-            </div>
-          </form>
-        </div>
         </div>
         `;
       }).join('') || '<div class="empty">还没有帖子，快来发第一个吧！</div>';
     };
 
+    // 帖子详情（点列表卡片进入）：完整内容 + 全部回复 + 回复框，不再在列表里全部摊开
+    const renderForumDetail = (id) => {
+      const p = all.find(x => x.id === id);
+      if (!p) return '<div class="empty">帖子不存在或已被删除。</div>';
+      const me = getAuth();
+      const isAdmin = !!(me && (me.role === 'admin' || me.role === 'superadmin'));
+      const postAuthor = getPostAuthor(p);
+      const canManage = isAdmin || (me && postAuthor === me.username);
+      const isEditing = window.forumEditId === p.id;
+      const replies = p.replies || [];
+      const likeKey = (r) => `${p.id}::${r.id}`;
+      return html`
+        <div class="forum-detail">
+          <button class="forum-back-btn" onclick="closeForumPost()">← 返回帖子列表</button>
+          <article class="forum-detail-post">
+            <h2 class="forum-detail-title">${escapeHtml(p.title)}</h2>
+            <div class="forum-detail-meta">
+              <span class="forum-author-avatar">${escapeHtml(initialOf(getPostAuthor(p)))}</span>
+              <span class="forum-author-name">${escapeHtml(getPostAuthor(p))}</span>
+              <span>发布于 ${new Date(p.createdAt).toLocaleString()}</span>
+              <span>👀 ${p.views || 0} 次查看</span>
+              <span>👍 ${p.likes || 0} 个赞</span>
+              ${canManage && !isEditing ? html`<div class="forum-detail-actions">
+                <button class="btn secondary small" onclick="editPost('${p.id}')">编辑</button>
+                <button class="btn danger small" onclick="deletePost('${p.id}')">删除</button>
+              </div>` : ''}
+            </div>
+            ${isEditing ? html`
+              <form class="forum-new-post-form" onsubmit="return savePostEdit('${p.id}', this)">
+                <label>帖子标题</label>
+                <input name="title" value="${escapeHtml(p.title)}" required>
+                <label>帖子内容</label>
+                <textarea name="content" required>${escapeHtml(p.content)}</textarea>
+                <div class="form-actions">
+                  <button class="btn secondary" type="button" onclick="cancelPostEdit()">取消</button>
+                  <button class="btn primary" type="submit">保存修改</button>
+                </div>
+              </form>
+            ` : html`<div class="forum-detail-content">${escapeHtml(p.content)}</div>`}
+          </article>
+          <section class="forum-replies-sec">
+            <h3 class="forum-replies-title">${replies.length} 条回复</h3>
+            ${replies.length ? replies.map(r => html`
+              <div class="forum-reply">
+                <div class="forum-reply-content">${escapeHtml(r.text||r.content)}</div>
+                <div class="forum-reply-meta">
+                  <span class="forum-reply-author">${escapeHtml(r.author || '热心网友')}</span>
+                  <span>${new Date(r.createdAt).toLocaleString()}</span>
+                  <div class="forum-reply-actions">
+                    <button class="btn secondary small${myLikes.has(likeKey(r)) ? ' liked' : ''}" onclick="likeReply('${p.id}', '${r.id}')" title="${myLikes.has(likeKey(r)) ? '取消赞' : '点赞'}">👍 ${r.likes || 0}</button>
+                  </div>
+                </div>
+              </div>`).join('') : '<div class="forum-no-replies">还没有回复，来抢沙发～</div>'}
+            <form class="forum-reply-form" data-id="${p.id}">
+              <label>写下你的回复</label>
+              <div class="forum-reply-box">
+                <input name="reply" placeholder="友善、理性地交流..." required>
+                <button class="btn primary" type="submit">提交回复</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      `;
+    };
+
+    const renderForumBody = (keyword, filter, sort) => {
+      if (window.forumOpenPost) return renderForumDetail(window.forumOpenPost);
+      return `<div class="forum-posts">${renderForumList(keyword, filter, sort)}</div>`;
+    };
+
     setApp(html`
       <div class="forum-page">
-        <div class="forum-header">
+        <div class="forum-header hero-banner" style="--banner:url('${legalBannerFor('forum')}');">
           <div class="header-content">
             <h1>法律论坛</h1>
             <p class="forum-subtitle">专业讨论 · 经验分享 · 法律交流</p>
@@ -7695,7 +8028,7 @@
           </form>
         </div>
         
-        <div id="forumList" class="forum-posts">${renderForumList()}</div>
+        <div id="forumList" class="forum-posts">${renderForumBody()}</div>
       </div>
     `);
 
@@ -7720,21 +8053,24 @@
       });
     }
     
-    // 搜索功能
+    // 搜索功能（输入时回到列表视图）
     document.getElementById('forumSearch').addEventListener('input', (e) => {
-      $forumList.innerHTML = renderForumList(e.target.value, currentFilter, currentSort);
+      window.forumOpenPost = null;
+      $forumList.innerHTML = renderForumBody(e.target.value, currentFilter, currentSort);
     });
 
     // 筛选功能
     document.getElementById('forumFilter').addEventListener('change', (e) => {
       currentFilter = e.target.value;
-      $forumList.innerHTML = renderForumList(document.getElementById('forumSearch').value, currentFilter, currentSort);
+      window.forumOpenPost = null;
+      $forumList.innerHTML = renderForumBody(document.getElementById('forumSearch').value, currentFilter, currentSort);
     });
 
     // 排序功能
     document.getElementById('forumSort').addEventListener('change', (e) => {
       currentSort = e.target.value;
-      $forumList.innerHTML = renderForumList(document.getElementById('forumSearch').value, currentFilter, currentSort);
+      window.forumOpenPost = null;
+      $forumList.innerHTML = renderForumBody(document.getElementById('forumSearch').value, currentFilter, currentSort);
     });
 
     // 发布新帖
@@ -7754,6 +8090,7 @@
         $newPostPanel.classList.remove('is-open');
         $addPostBtn.textContent = '+ 发布新帖';
       }
+      window.forumOpenPost = null;
       renderForum();
     });
 
@@ -7778,6 +8115,19 @@
         }
       });
     }
+
+    // 全局函数：打开帖子详情（进入详情时计一次浏览量）
+    window.openForumPost = (id) => {
+      markViewed(id);
+      window.forumOpenPost = id;
+      renderForum();
+    };
+
+    // 全局函数：关闭帖子详情，返回列表
+    window.closeForumPost = () => {
+      window.forumOpenPost = null;
+      renderForum();
+    };
 
     // 全局函数：进入编辑（内联表单）
     window.editPost = (id) => {
@@ -7834,6 +8184,7 @@
       if (!confirm('确定要删除这个帖子吗？删除后无法恢复。')) return;
       const updated = posts.filter(x => x.id !== id);
       writeStorage(STORAGE_KEYS.forum, updated);
+      if (window.forumOpenPost === id) window.forumOpenPost = null;
       renderForum();
     };
 
@@ -7864,18 +8215,11 @@
       renderForum();
     };
 
-    // 全局函数：展开 / 收起全部回复
-    window.expandReplies = (id) => {
-      if (!window.forumExpanded) window.forumExpanded = new Set();
-      if (window.forumExpanded.has(id)) window.forumExpanded.delete(id);
-      else window.forumExpanded.add(id);
-      renderForum();
-    };
-
-    // 全局函数：执行搜索
+    // 全局函数：执行搜索（回到列表视图）
     window.performForumSearch = () => {
       const searchTerm = document.getElementById('forumSearch').value.trim();
-      $forumList.innerHTML = renderForumList(searchTerm, currentFilter, currentSort);
+      window.forumOpenPost = null;
+      $forumList.innerHTML = renderForumBody(searchTerm, currentFilter, currentSort);
     };
 
     // 全局函数：应用筛选
@@ -7884,7 +8228,8 @@
       const sort = document.getElementById('forumSort').value;
       currentFilter = filter;
       currentSort = sort;
-      $forumList.innerHTML = renderForumList(document.getElementById('forumSearch').value, currentFilter, currentSort);
+      window.forumOpenPost = null;
+      $forumList.innerHTML = renderForumBody(document.getElementById('forumSearch').value, currentFilter, currentSort);
     };
   }
 
@@ -8239,7 +8584,7 @@
 
     setApp(html`
       <div class="lawyers-page">
-        <div class="lawyers-header">
+        <div class="lawyers-header hero-banner" style="--banner:url('${legalBannerFor('lawyers')}');">
           <div class="header-content">
             <h1>律师推广</h1>
             <p class="lawyers-subtitle">专业律师 · 服务展示 · 法律咨询</p>
@@ -8732,6 +9077,8 @@
       `);
       return;
     }
+    // 回到后台首页 → 清空子视图记录（供 kh:datasync 重渲判断）
+    activeAdminSubView = null;
     
     // 获取所有数据统计
     const films = readStorage(STORAGE_KEYS.films, []);
@@ -8909,6 +9256,7 @@
   window.renderAdmin = renderAdmin;
 
   window.openAdminAnalytics = () => {
+    activeAdminSubView = 'openAdminAnalytics';
     const user = getAuth();
     if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
       alert('只有管理员可以访问运营数据分析');
@@ -9156,7 +9504,7 @@
             ${lawyers.map(lawyer => html`
               <div class="admin-item">
                 <div class="item-info">
-                  <div class="item-title">${escapeHtml(lawyer.name)}</div>
+                  <div class="item-title">${escapeHtml(lawyer.name)} ${lawyer.verified ? '<span class="lawyer-verified-badge">已认证</span>' : ''}</div>
                   <div class="item-meta">${escapeHtml(lawyer.firm||'—')} · ${escapeHtml((lawyer.areas||[]).join('、') || '—')}</div>
                   <div class="item-desc">${escapeHtml(lawyer.bio||'')} · ${escapeHtml(lawyer.email||'')} ${lawyer.phone ? '· ' + escapeHtml(lawyer.phone) : ''}</div>
                 </div>
@@ -9182,8 +9530,8 @@
     
     const user = getAuth();
     
-    // 确保用户有个人资料数据
-    if (!user.profile) {
+    // 确保用户有个人资料数据（兼容：profile 缺失 / 是字符串 / 缺少 socialMedia 字段，避免渲染崩溃导致页面按钮失效）
+    if (!user.profile || typeof user.profile !== 'object' || Array.isArray(user.profile)) {
       user.profile = {
         realName: '',
         phone: '',
@@ -9203,9 +9551,12 @@
           linkedin: ''
         }
       };
-      setAuth(user); // 保存更新后的用户信息
+    } else if (!user.profile.socialMedia || typeof user.profile.socialMedia !== 'object') {
+      // 旧账号资料缺少 socialMedia 字段：补齐空结构，防止 profile.socialMedia.xxx 读取报错
+      user.profile.socialMedia = { wechat: '', qq: '', weibo: '', linkedin: '' };
     }
-    
+    setAuth(user); // 保存归一化后的用户信息
+
     const profile = user.profile;
     
     setApp(html`

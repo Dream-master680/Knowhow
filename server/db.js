@@ -24,7 +24,13 @@ const SERVER_KEYS = [
   'user_notifications',
   'chat_sessions',
   'chat_messages',
-  'user_friends'
+  'user_friends',
+  // 展示内容（前端 app.js 播种，首个访客 bootstrap 后补播自举上送）
+  'ln_news_v1',
+  'ln_films_v1',
+  'ln_law_updates_v1',
+  'ln_lawyers_v1',
+  'aboutInfo'
 ];
 
 function initDb() {

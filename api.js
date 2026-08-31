@@ -29,7 +29,13 @@
     'user_notifications',
     'chat_sessions',
     'chat_messages',
-    'user_friends'
+    'user_friends',
+    // 展示内容（app.js 播种，空服务器由首个访客 bootstrap 后补播自举上送）
+    'ln_news_v1',
+    'ln_films_v1',
+    'ln_law_updates_v1',
+    'ln_lawyers_v1',
+    'aboutInfo'
   ];
   // users 走专用 API，不通用同步（避免明文密码上送）；但 bootstrap 会拉取安全投影供读取
   const AI_KEY_RE = /^ln_ai_(consult|widget)_history_/;
@@ -37,9 +43,36 @@
   const MTIME_KEY = 'kh_sync_mtime';
   const AUTH_KEY = 'ln_auth_v1';
   const SYNC_DEBOUNCE = 1500;
-  // 消息实时轮询：仅拉聊天相关键（比 bootstrap 全量轻量）
-  const POLL_KEYS = ['chat_messages', 'chat_sessions', 'user_friends', 'user_notifications'];
+  // 实时轮询：按「当前路由 → 依赖键集」映射，各页只轮询自己关心的键。
+  // 展示内容页只刷内容键——聊天/通知变更不会触发它们重渲（保住输入框焦点/轮播）；
+  // 纯本地页（profile/settings/civilcode/login 等）routePollKeys 返回 null → 不轮询。
   const POLL_INTERVAL = 5000;
+  const POLL_ROUTES = {
+    home: ['ln_news_v1', 'ln_films_v1', 'ln_law_updates_v1', 'ln_lawyers_v1', 'aboutInfo', 'ln_forum_posts_v1', 'ln_community_feed_v1', 'ln_qa_items_v1'],
+    news: ['ln_news_v1'],
+    films: ['ln_films_v1'],
+    lawUpdates: ['ln_law_updates_v1'],
+    about: ['aboutInfo'],
+    lawyers: ['ln_lawyers_v1'],
+    forum: ['ln_forum_posts_v1', 'ln_community_feed_v1', 'ln_qa_items_v1'],
+    messages: ['chat_messages', 'chat_sessions', 'user_friends', 'user_notifications'],
+    interaction: ['legal_messages', 'legal_consultations', 'legal_cases'],
+    admin: SERVER_KEYS.slice()
+  };
+  function routePollKeys() {
+    const h = location.hash;
+    if (h.startsWith('#/messages')) return POLL_ROUTES.messages;
+    if (h.startsWith('#/interaction')) return POLL_ROUTES.interaction;
+    if (h.startsWith('#/admin')) return POLL_ROUTES.admin;
+    if (h.startsWith('#/news')) return POLL_ROUTES.news;
+    if (h.startsWith('#/films')) return POLL_ROUTES.films;
+    if (h.startsWith('#/law-updates')) return POLL_ROUTES.lawUpdates;
+    if (h.startsWith('#/about')) return POLL_ROUTES.about;
+    if (h.startsWith('#/lawyers')) return POLL_ROUTES.lawyers;
+    if (h.startsWith('#/forum')) return POLL_ROUTES.forum;
+    if (h === '' || h === '#' || h.startsWith('#/')) return POLL_ROUTES.home; // 首页/未匹配兜底
+    return null; // 纯本地页不轮询
+  }
   let pollTimer = null;
 
   function isSyncable(key) {
@@ -82,7 +115,12 @@
 
   // ── 公开 API ────────────────────────────────
   function read(key, fallback) {
-    if (key in cache) return cache[key];
+    if (key in cache) {
+      const v = cache[key];
+      // 缓存/存储值为 null 或 undefined、但本次调用提供了默认值时：返回默认值，
+      // 避免「先用 null fallback 读取过 → 缓存被 null 污染 → 后续带默认值读取仍拿到 null」导致的渲染崩溃
+      return (v == null && fallback !== undefined) ? fallback : v;
+    }
     cache[key] = readRaw(key, fallback);
     return cache[key];
   }
@@ -231,8 +269,10 @@
 
   async function poll() {
     if (mode !== 'online' || document.hidden) return;       // 离线/后台标签页跳过
-    if (!location.hash.startsWith('#/messages')) return;    // 只在交流中心页轮询
-    const res = await api('/api/poll?keys=' + POLL_KEYS.join(','), { authed: false });
+    // 按当前路由取关心的键集：展示页只刷内容键，纯本地页 null 不轮询
+    const keys = routePollKeys();
+    if (!keys || keys.length === 0) return;
+    const res = await api('/api/poll?keys=' + keys.join(','), { authed: false });
     if (!res.ok || !res.data || !res.data.keys) return;
     let changed = false;
     for (const [k, v] of Object.entries(res.data.keys)) {

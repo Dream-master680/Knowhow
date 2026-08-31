@@ -27,8 +27,8 @@
   <script>
     /* 多主题 + 护眼 + 字号：首帧前从 localStorage 恢复三态，防闪烁 */
     (function () {
-      var THEMES = ['deep-blue', 'red-white'];
-      var NAMES = { 'deep-blue': '深蓝', 'red-white': '红白' };
+      var THEMES = ['deep-blue', 'gov-red'];
+      var NAMES = { 'deep-blue': '深蓝', 'gov-red': '红白' };
       var root = document.documentElement;
       function validTheme(t) { return THEMES.indexOf(t) >= 0 ? t : 'deep-blue'; }
       function validFont(f) { return (f === 'lg' || f === 'xl') ? f : 'std'; }
@@ -135,7 +135,7 @@
         <a href="#/ai-consult" class="nav-link">AI咨询</a>
         <button id="themeToggle" class="theme-toggle" type="button" title="点击切换主题风格" aria-label="切换主题风格">
           <span class="tt-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
-          <span class="tt-label" id="themeToggleLabel">红色</span>
+          <span class="tt-label" id="themeToggleLabel">深蓝</span>
         </button>
         <a href="#/messages" class="nav-link" id="messagesLink" style="display: none;">交流中心</a>
         <a href="#/lawyer-portal" class="nav-link" id="lawyerPortalLink" style="display: none;">律师端</a>
@@ -220,7 +220,7 @@
           <div class="settings-sec-title">主题风格</div>
           <div class="theme-grid">
             <label class="theme-card"><input type="radio" name="khTheme" value="deep-blue" checked><span class="theme-swatch sw-deep-blue"></span><span class="theme-name">深蓝</span></label>
-            <label class="theme-card"><input type="radio" name="khTheme" value="red-white"><span class="theme-swatch sw-red-white"></span><span class="theme-name">红白</span></label>
+            <label class="theme-card"><input type="radio" name="khTheme" value="gov-red"><span class="theme-swatch sw-gov-red"></span><span class="theme-name">红白</span></label>
           </div>
         </div>
         <div class="settings-section">
@@ -251,6 +251,11 @@
     <div class="container">
         <p>© 2026 KnowHow · 红色法治 · 服务人民</p>
         <p class="small">让法律更可亲，让求助更有回应</p>
+        <div class="gov-footer-meta" aria-label="政务信息">
+          <span>主办：KnowHow 法律新媒体平台</span>
+          <span>ICP 备案号：沪ICP备2026000000号-1</span>
+          <span>服务电话：12368（司法服务热线）</span>
+        </div>
         <details class="corner-note" aria-label="Jasper手记">
           <summary>Jasper</summary>
           <button type="button" class="corner-note-content" onclick="this.closest('details').open = false">你走过的每一步，都会在未来回头时发光。—— Jasper</button>

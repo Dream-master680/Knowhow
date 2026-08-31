@@ -10,6 +10,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { hashPassword, revokeAllSessions, authMiddleware, adminOnly, safeUser } = require('../auth');
+const { readKv, writeKv } = require('../db');
 
 module.exports = function (db) {
   const router = express.Router();
@@ -134,10 +135,42 @@ module.exports = function (db) {
       }
     }
 
+    // 律师推广卡协同认证：通过 → upsert 已认证卡；拒绝 → 卡 verified=false（保留其余字段，管理员可补全资料）
+    const rawLawyers = readKv(db, 'ln_lawyers_v1');
+    const lawyers = Array.isArray(rawLawyers) ? rawLawyers : [];
+    let lawyerCard = null;
+    const idx = lawyers.findIndex(l => l && l.username === app.username);
+    if (idx !== -1) {
+      lawyerCard = lawyers[idx];
+      if (approve) {
+        lawyerCard.verified = true;
+        if (!lawyerCard.email && app.email) lawyerCard.email = app.email;
+        lawyerCard.updatedAt = now;
+      } else {
+        lawyerCard.verified = false;
+        lawyerCard.updatedAt = now;
+      }
+    } else if (approve) {
+      lawyerCard = {
+        id: 'id_' + crypto.randomBytes(8).toString('hex'),
+        username: app.username,
+        name: app.username,
+        email: app.email || '',
+        firm: '',
+        areas: [],
+        bio: '',
+        verified: true,
+        createdAt: now,
+        updatedAt: now
+      };
+      lawyers.push(lawyerCard);
+    }
+    if (lawyerCard) writeKv(db, 'ln_lawyers_v1', lawyers, now);
+
     db.prepare(
       'INSERT INTO kv_rows (key, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at'
     ).run('lawyer_applications', JSON.stringify(applications), now);
-    res.json({ ok: true, application: app });
+    res.json({ ok: true, application: app, lawyerCard: lawyerCard || null });
   };
   router.post('/lawyer-applications/:id/approve', handleLawyerApplication(true));
   router.post('/lawyer-applications/:id/reject', handleLawyerApplication(false));
