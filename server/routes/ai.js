@@ -13,7 +13,35 @@ const MAX_CONTENT = 20000;
 module.exports = function () {
   const router = express.Router();
 
+  // ── 简易内存限流：防公网滥用烧 Key（每 IP 每分钟上限，超额 429）──
+  const RATE_MAX = 12;                       // 每 IP 每分钟最多 12 次（流式对话足够）
+  const RATE_WINDOW_MS = 60 * 1000;
+  const hits = new Map();
+  function limited(ip) {
+    const now = Date.now();
+    const rec = hits.get(ip);
+    if (!rec || rec.resetAt <= now) {
+      hits.set(ip, { n: 1, resetAt: now + RATE_WINDOW_MS });
+      return false;
+    }
+    rec.n += 1;
+    return rec.n > RATE_MAX;
+  }
+  // 周期性清理过期计数，防 Map 无限增长
+  setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of hits) if (v.resetAt <= now) hits.delete(k);
+    if (hits.size > 10000) hits.clear();
+  }, RATE_WINDOW_MS).unref();
+
   router.post('/ai', async (req, res) => {
+    // 限流（部署在 Nginx 后取 X-Forwarded-For；直连取 socket 地址）
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+      (req.socket && req.socket.remoteAddress) || '';
+    if (ip && limited(ip)) {
+      return res.status(429).json({ error: { message: '请求过于频繁，请稍后再试' } });
+    }
+
     const { messages, model, stream, thinking } = req.body || {};
     const apiKey = String(process.env.DEEPSEEK_API_KEY || '').trim();
     const baseUrl = String(process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '');
