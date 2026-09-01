@@ -206,6 +206,8 @@
     delete cache[AUTH_KEY];
     dirty.delete(AUTH_KEY);
     try { window.dispatchEvent(new CustomEvent('kh:authchange')); } catch (e) { /* ignore */ }
+    // 会话失效 → 清登录态后以游客身份重拉（不降级本地模式，私有数据随游客返回置空）
+    scheduleReload();
   }
 
   // ── 推送脏数据 → 服务器 ──────────────────────
@@ -217,7 +219,14 @@
     try {
       const res = await api('/api/sync', { method: 'POST', body: payload });
       if (res.ok) {
-        dirty.clear();
+        // 只清「被接受」的键；被拒的保留 dirty（如游客写入私有键被拒 → 登录后重推，不丢数据）
+        const rejected = (res.data && Array.isArray(res.data.rejected)) ? res.data.rejected : [];
+        if (rejected.length > 0) {
+          const rej = new Set(rejected);
+          [...dirty].forEach(k => { if (!rej.has(k)) dirty.delete(k); });
+        } else {
+          dirty.clear();
+        }
         persistMeta();
       }
       // 失败则保留 dirty，等下次调度 / 下次加载再推
@@ -228,34 +237,58 @@
   }
 
   // ── bootstrap：先推 dirty → 再拉权威 ─────────
+  let bootstrapping = false;
   async function bootstrap() {
-    // 1) 先推送离线期间的写入
-    if (dirty.size > 0) await flush();
-
-    // 2) 拉权威数据
-    const res = await api('/api/bootstrap', { authed: false });
-    if (!res.ok || !res.data || !res.data.keys) {
-      enterLocalMode();
-      return;
-    }
-    mode = 'online';
-    const { keys, serverTime } = res.data;
-    let changed = false;
-    for (const [k, v] of Object.entries(keys)) {
-      if (!isServerKey(k)) continue;
-      cache[k] = v;
-      writeRaw(k, v);
-      if (serverTime) mtime[k] = serverTime;
-      changed = true;
-    }
-    dirty.clear();
-    persistMeta();
-
-    // 3) 通知各模块刷新（app.js 监听后 navigate() 重渲当前页）
+    if (bootstrapping) return false;
+    bootstrapping = true;
     try {
-      window.dispatchEvent(new CustomEvent('kh:datasync'));
-    } catch (e) { /* ignore */ }
-    return changed;
+      // 1) 先推送离线期间的写入（登录后带 token；被拒的键保留 dirty 等重推）
+      if (dirty.size > 0) await flush();
+
+      // 2) 拉权威数据（带 token：登录后服务端按用户过滤私有键）
+      const res = await api('/api/bootstrap');
+      if (res.status === 401) {
+        // token 失效：api() 已清登录态，scheduleReload 稍后以游客身份重拉（不降级本地模式）
+        return false;
+      }
+      if (!res.ok || !res.data || !res.data.keys) {
+        enterLocalMode();
+        return false;
+      }
+      mode = 'online';
+      const { keys, serverTime } = res.data;
+      let changed = false;
+      for (const [k, v] of Object.entries(keys)) {
+        if (!isServerKey(k)) continue;
+        if (dirty.has(k)) continue;      // 本端有未上送写入：保留本地，等下次重推（flush 拒了它）
+        cache[k] = v;
+        writeRaw(k, v);
+        if (serverTime) mtime[k] = serverTime;
+        changed = true;
+      }
+      // 不整体 dirty.clear()：flush 成功后已清「被接受」键；剩余为被拒键 → 保留，登录后重推
+      persistMeta();
+
+      // 3) 通知各模块刷新（app.js 监听后 navigate() 重渲当前页）
+      try {
+        window.dispatchEvent(new CustomEvent('kh:datasync'));
+      } catch (e) { /* ignore */ }
+      return changed;
+    } finally {
+      bootstrapping = false;
+    }
+  }
+
+  // ── 登录态变化后重新拉取（防并发/防递归：事件里延迟到当前请求结束再拉）──
+  let reloadQueued = false;
+  function scheduleReload() {
+    if (reloadQueued) return;
+    reloadQueued = true;
+    setTimeout(function () {
+      reloadQueued = false;
+      if (mode !== 'online') return;
+      bootstrap();
+    }, 0);
   }
 
   // ── 轻量轮询（消息实时同步）────────────────────
@@ -272,7 +305,7 @@
     // 按当前路由取关心的键集：展示页只刷内容键，纯本地页 null 不轮询
     const keys = routePollKeys();
     if (!keys || keys.length === 0) return;
-    const res = await api('/api/poll?keys=' + keys.join(','), { authed: false });
+    const res = await api('/api/poll?keys=' + keys.join(','));
     if (!res.ok || !res.data || !res.data.keys) return;
     let changed = false;
     for (const [k, v] of Object.entries(res.data.keys)) {
@@ -312,6 +345,7 @@
     const res = await api('/api/auth/login', { method: 'POST', authed: false, body: { username, password } });
     if (res.ok && res.data) {
       setSession(res.data.user ? Object.assign({}, res.data.user, { token: res.data.token }) : null);
+      scheduleReload();   // 登录后按当前用户重拉（私有数据 + users）
       return { ok: true, user: res.data.user };
     }
     return { ok: false, error: (res.data && res.data.error) || '登录失败' };
@@ -320,18 +354,26 @@
   async function register(data) {
     const res = await api('/api/auth/register', { method: 'POST', authed: false, body: data });
     if (res.ok && res.data) {
-      if (!res.data.pending) setSession(res.data.user ? Object.assign({}, res.data.user, { token: res.data.token }) : null);
+      if (!res.data.pending) {
+        setSession(res.data.user ? Object.assign({}, res.data.user, { token: res.data.token }) : null);
+        scheduleReload();
+      }
       return { ok: true, user: res.data.user, pending: !!res.data.pending };
     }
     return { ok: false, error: (res.data && res.data.error) || '注册失败' };
   }
 
   async function logout() {
+    // 登出前先把未上送写入推出去（带当前 token，避免登出后游客身份被拒）
+    if (mode === 'online' && dirty.size > 0) {
+      try { await flush(); } catch (e) { /* ignore */ }
+    }
     const t = token();
     if (t) {
       try { await api('/api/auth/logout', { method: 'POST' }); } catch (e) { /* ignore */ }
     }
     remove(AUTH_KEY);
+    scheduleReload();   // 以游客身份重拉：清本地私有数据 + users
   }
 
   async function changePassword(currentPassword, newPassword) {
@@ -342,7 +384,7 @@
 
   /** 手动刷新当前用户数据（用户管理/审批后调用，让 bootstrap 之后的缓存保持新鲜） */
   async function refreshUsers() {
-    const res = await api('/api/bootstrap', { authed: false });
+    const res = await api('/api/bootstrap');
     if (res.ok && res.data && res.data.keys && res.data.keys.users) {
       cache.users = res.data.keys.users;
       writeRaw('users', res.data.keys.users);
@@ -373,8 +415,11 @@
   } catch (e) { /* ignore */ }
 
   window.Sync = {
-    // 数据
-    read: read,
+    // 数据（公开 read 剥离墓碑：渲染层永远看不到 _deleted item；flush 走内部 raw read，墓碑照常上送）
+    read: function (key, fallback) {
+      const v = read(key, fallback);
+      return Array.isArray(v) ? v.filter(function (it) { return !(it && it._deleted === true); }) : v;
+    },
     write: write,
     remove: remove,
     clearAll: clearAll,

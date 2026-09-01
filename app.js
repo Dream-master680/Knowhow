@@ -33,6 +33,31 @@
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn('writeStorage error', e); }
   };
 
+  // 墓碑删除：删除 = 给 item 打 _deleted 标记并刷新时间戳，再整数组回写。
+  // 服务端按 id 合并时墓碑优先，其他客户端 poll/bootstrap 拉到的是剥离墓碑后的数据 → 删除不会复活。
+  const markDeleted = (key, id) => {
+    const list = readStorage(key, []);
+    if (!Array.isArray(list)) return;
+    const now = Date.now();
+    let changed = false;
+    const next = list.map((it) => {
+      if (it && !it._deleted && String(it.id) === String(id)) {
+        changed = true;
+        return Object.assign({}, it, { _deleted: true, updatedAt: now });
+      }
+      return it;
+    });
+    if (changed) writeStorage(key, next);
+  };
+  const markAllDeleted = (key) => {
+    const list = readStorage(key, []);
+    if (!Array.isArray(list) || list.length === 0) return;
+    const now = Date.now();
+    writeStorage(key, list.map((it) => (it && typeof it === 'object')
+      ? Object.assign({}, it, { _deleted: true, updatedAt: now })
+      : it));
+  };
+
   // 兼容单文件/三文件部署：为后台数据工具提供轻量 dataManager
   if (!window.dataManager) {
     window.dataManager = {
@@ -142,8 +167,7 @@
         setList(CHAT_KEYS.friends, friends);
       },
       removeFriend: (friendId) => {
-        const friends = getList(CHAT_KEYS.friends).filter(f => f.id !== friendId);
-        setList(CHAT_KEYS.friends, friends);
+        markDeleted(CHAT_KEYS.friends, friendId);
       },
 
       getNotifications: () => getList(CHAT_KEYS.notifications),
@@ -2242,6 +2266,7 @@
 
   // 律师端CRUD操作函数
   window.addLawyerCase = () => {
+    const user = getAuth();
     const title = prompt('案件标题:');
     if (title) {
       const client = prompt('客户姓名:');
@@ -2252,6 +2277,7 @@
       const cases = readStorage('lawyer_cases', []);
       const newCase = {
         id: nid(),
+        lawyerId: (user && user.id) || '',
         title,
         client: client || '',
         type: type || '民商事',
@@ -2281,9 +2307,7 @@
 
   window.deleteLawyerCase = (caseId) => {
     if (confirm('确定删除此案件？')) {
-      const cases = readStorage('lawyer_cases', []);
-      const filteredCases = cases.filter(c => c.id !== caseId);
-      writeStorage('lawyer_cases', filteredCases);
+      markDeleted('lawyer_cases', caseId);
       renderLawyerCases();
     }
   };
@@ -2529,6 +2553,7 @@
   };
 
   window.addLawyerClient = () => {
+    const user = getAuth();
     const name = prompt('客户姓名:');
     if (name) {
       const phone = prompt('联系电话:');
@@ -2538,6 +2563,7 @@
       const clients = readStorage('lawyer_clients', []);
       const newClient = {
         id: nid(),
+        lawyerId: (user && user.id) || '',
         name,
         phone: phone || '',
         email: email || '',
@@ -2566,14 +2592,13 @@
 
   window.deleteLawyerClient = (clientId) => {
     if (confirm('确定删除此客户？')) {
-      const clients = readStorage('lawyer_clients', []);
-      const filteredClients = clients.filter(c => c.id !== clientId);
-      writeStorage('lawyer_clients', filteredClients);
+      markDeleted('lawyer_clients', clientId);
       renderLawyerClients();
     }
   };
 
   window.addLawyerAppointment = () => {
+    const user = getAuth();
     const title = prompt('预约标题:');
     if (title) {
       const client = prompt('客户姓名:');
@@ -2585,6 +2610,7 @@
       const appointments = readStorage('lawyer_appointments', []);
       const newAppointment = {
         id: nid(),
+        lawyerId: (user && user.id) || '',
         title,
         client: client || '',
         type: type || '咨询',
@@ -2616,9 +2642,7 @@
 
   window.deleteLawyerAppointment = (appointmentId) => {
     if (confirm('确定删除此预约？')) {
-      const appointments = readStorage('lawyer_appointments', []);
-      const filteredAppointments = appointments.filter(a => a.id !== appointmentId);
-      writeStorage('lawyer_appointments', filteredAppointments);
+      markDeleted('lawyer_appointments', appointmentId);
       renderLawyerAppointments();
     }
   };
@@ -3377,8 +3401,7 @@
 
   window.deleteAdminFilm = (id) => {
     if (!confirm('确定要删除这个影片吗？删除后无法恢复。')) return;
-    const films = readStorage(STORAGE_KEYS.films, []);
-    writeStorage(STORAGE_KEYS.films, films.filter(f => f.id !== id));
+    markDeleted(STORAGE_KEYS.films, id);
     alert('影片删除成功');
     renderAdminFilms();
   };
@@ -3462,8 +3485,7 @@
 
   window.deleteAdminNews = (id) => {
     if (!confirm('确定要删除这条要闻吗？删除后无法恢复。')) return;
-    const news = readStorage(STORAGE_KEYS.news, []);
-    writeStorage(STORAGE_KEYS.news, news.filter(n => n.id !== id));
+    markDeleted(STORAGE_KEYS.news, id);
     alert('要闻删除成功');
     renderAdminNews();
   };
@@ -3506,8 +3528,7 @@
 
   window.deleteAdminPost = (id) => {
     if (!confirm('确定要删除这个帖子吗？删除后无法恢复。')) return;
-    const posts = readStorage(STORAGE_KEYS.forum, []);
-    writeStorage(STORAGE_KEYS.forum, posts.filter(p => p.id !== id));
+    markDeleted(STORAGE_KEYS.forum, id);
     alert('帖子删除成功');
     renderAdminForum();
   };
@@ -3515,16 +3536,14 @@
   // ── 社区动态 / 问答（删除）──────────────────────
   window.deleteAdminCommunity = (id) => {
     if (!confirm('确定要删除这条社区动态吗？删除后无法恢复。')) return;
-    const items = readStorage(STORAGE_KEYS.community, []);
-    writeStorage(STORAGE_KEYS.community, items.filter(i => i.id !== id));
+    markDeleted(STORAGE_KEYS.community, id);
     alert('社区动态删除成功');
     renderAdminCommunity();
   };
 
   window.deleteAdminQA = (id) => {
     if (!confirm('确定要删除这条问答吗？删除后无法恢复。')) return;
-    const qa = readStorage(STORAGE_KEYS.qa, []);
-    writeStorage(STORAGE_KEYS.qa, qa.filter(i => i.id !== id));
+    markDeleted(STORAGE_KEYS.qa, id);
     alert('问答删除成功');
     renderAdminQA();
   };
@@ -3620,8 +3639,7 @@
 
   window.deleteAdminLawUpdate = (id) => {
     if (!confirm('确定要删除这条记录吗？删除后无法恢复。')) return;
-    const updates = readStorage(STORAGE_KEYS.lawUpdates, []);
-    writeStorage(STORAGE_KEYS.lawUpdates, updates.filter(u => u.id !== id));
+    markDeleted(STORAGE_KEYS.lawUpdates, id);
     alert('记录删除成功');
     renderAdminLawUpdates();
   };
@@ -3713,8 +3731,7 @@
 
   window.deleteAdminLawyer = (id) => {
     if (!confirm('确定要删除这位律师吗？删除后无法恢复。')) return;
-    const lawyers = readStorage(STORAGE_KEYS.lawyers, []);
-    writeStorage(STORAGE_KEYS.lawyers, lawyers.filter(l => l.id !== id));
+    markDeleted(STORAGE_KEYS.lawyers, id);
     alert('律师删除成功');
     renderAdminLawyers();
   };
@@ -4881,7 +4898,7 @@
        return;
      }
      if (!confirm('确定要删除这条咨询吗？删除后无法恢复。')) return;
-     writeStorage('legal_consultations', consultations.filter(c => c.id !== consultationId));
+     markDeleted('legal_consultations', consultationId);
      alert('咨询已删除');
      renderInteraction();
    };
@@ -4898,7 +4915,7 @@
        return;
      }
      if (!confirm('确定要删除这个案件吗？删除后无法恢复。')) return;
-     writeStorage('legal_cases', cases.filter(c => c.id !== caseId));
+     markDeleted('legal_cases', caseId);
      alert('案件已删除');
      renderInteraction();
    };
@@ -4915,7 +4932,7 @@
        return;
      }
      if (!confirm('确定要删除这条消息吗？删除后无法恢复。')) return;
-     writeStorage('legal_messages', messages.filter(m => m.id !== messageId));
+     markDeleted('legal_messages', messageId);
      alert('消息已删除');
      renderInteraction();
    };
@@ -6995,8 +7012,7 @@
         return;
       }
       if (!confirm('确定要删除这部影片吗？')) return;
-      const updated = all.filter(x => x.id !== id);
-      writeStorage(STORAGE_KEYS.films, updated);
+      markDeleted(STORAGE_KEYS.films, id);
       renderFilms();
     };
 
@@ -7735,8 +7751,7 @@
         return;
       }
       if (!confirm('确定要删除这条要闻吗？删除后无法恢复。')) return;
-      const updated = all.filter(x => x.id !== id);
-      writeStorage(STORAGE_KEYS.news, updated);
+      markDeleted(STORAGE_KEYS.news, id);
       renderNews();
     };
 
@@ -8182,8 +8197,7 @@
       }
 
       if (!confirm('确定要删除这个帖子吗？删除后无法恢复。')) return;
-      const updated = posts.filter(x => x.id !== id);
-      writeStorage(STORAGE_KEYS.forum, updated);
+      markDeleted(STORAGE_KEYS.forum, id);
       if (window.forumOpenPost === id) window.forumOpenPost = null;
       renderForum();
     };
@@ -8871,8 +8885,7 @@
         return;
       }
       if (!confirm('确定要删除这个律师信息吗？删除后无法恢复。')) return;
-      const updated = all.filter(x => x.id !== id);
-      writeStorage(STORAGE_KEYS.lawyers, updated);
+      markDeleted(STORAGE_KEYS.lawyers, id);
       renderLawyers();
     };
 
@@ -10512,7 +10525,7 @@
 
   window.clearAllNotifications = function() {
     if (confirm('确定要清空所有通知吗？此操作不可恢复！')) {
-      writeStorage('user_notifications', []);
+      markAllDeleted('user_notifications');
       alert('所有通知已清空');
       renderAdminMessages();
     }
@@ -10520,9 +10533,7 @@
 
   window.deleteNotification = function(notificationId) {
     if (confirm('确定要删除这条通知吗？')) {
-      const notifications = readStorage('user_notifications', []);
-      const updatedNotifications = notifications.filter(n => n.id !== notificationId);
-      writeStorage('user_notifications', updatedNotifications);
+      markDeleted('user_notifications', notificationId);
       alert('通知已删除');
       renderAdminMessages();
     }
