@@ -1128,7 +1128,23 @@
   window.addEventListener('hashchange', navigate);
   window.addEventListener('DOMContentLoaded', () => { seedIfEmpty(); navigate(); updateAuthUI(); });
   // 同步桥事件：bootstrap 完成 → 重渲当前页拿服务器数据；服务器不可达降级本地 → 补播被跳过的服务端键
-  window.addEventListener('kh:datasync', () => {
+  // 重渲守卫：真变化到达时，若用户正停在输入框里打字、或开着新增/编辑表单 → 暂缓整页重渲、结束后再补一次
+  //（数据已先写入本地存储，暂缓只延后 DOM 刷新、不丢数据）。聊天输入框除外——保留实时收消息。
+  let syncPaused = false, syncPauseKeyCache = '', syncPauseTimer = null;
+  function isSyncEditing() {
+    const el = document.activeElement;
+    const editable = !!el && !!el.matches && el.matches('input,textarea,select,[contenteditable="true"]');
+    if (editable && el.id === 'chatInput') return false;   // 聊天输入框：#/messages 自带焦点恢复，保持实时
+    if (editable) return true;
+    // 正在新增/编辑全页表单（addAdminUser/editAdminUser/…/editAboutInfo 等 form.admin-form）→ 别被列表重渲顶掉
+    if (document.querySelector('#app form.admin-form')) return true;
+    return false;
+  }
+  function currentSyncPauseKey() {
+    const hasForm = !!document.querySelector('#app form.admin-form');
+    return location.hash + '|' + (activeAdminSubView || '') + '|' + hasForm;
+  }
+  function refreshDataSync() {
     // 在线补播：bootstrap/poll 后服务端某展示键仍缺失（如空服务器首访）→ 本地播种随 flush 上送自举
     seedAbsentDisplayKeys();
     // 管理后台停留在某个内嵌子视图时：就地重渲该子视图，不拉回后台首页（轮询同步不打断管理操作）
@@ -1138,6 +1154,27 @@
       navigate();
     }
     updateAuthUI();
+  }
+  window.addEventListener('kh:datasync', () => {
+    if (isSyncEditing()) {
+      syncPaused = true;                       // 正在编辑：暂缓重渲，失焦后再补（输入框不再闪跳/丢字）
+      syncPauseKeyCache = currentSyncPauseKey();
+      return;
+    }
+    syncPaused = false; syncPauseKeyCache = '';
+    refreshDataSync();
+  });
+  // 暂缓后的补刷新：焦点离开编辑区约 300ms 检查一次（避开与「点按钮」竞争，防止点下去前 DOM 被换掉）
+  document.addEventListener('focusout', () => {
+    if (!syncPaused) return;
+    clearTimeout(syncPauseTimer);
+    syncPauseTimer = setTimeout(() => {
+      if (!syncPaused) return;
+      if (isSyncEditing()) return;                               // 仍编辑（如 Tab 到下个输入框）→ 再等
+      if (currentSyncPauseKey() !== syncPauseKeyCache) { syncPaused = false; return; } // 视图已变：那次操作已自行刷新
+      syncPaused = false;
+      refreshDataSync();
+    }, 300);
   });
   window.addEventListener('kh:syncfallback', () => { seedIfEmpty(); navigate(); updateAuthUI(); });
 
@@ -6740,8 +6777,19 @@
     initGovHeroCarousel();
   }
 
-  function renderFilms() {
+  function renderFilms(forceList) {
     if (!requireAuth()) return;
+    // 跨同步刷新保留影视子视图（详情/评论区）：datasync→navigate 重渲时停在当前视图、不踢回列表（对齐论坛 forumOpenPost）。
+    // 显式回列表传 forceList=true（“返回影视”按钮 / 编辑删除后）；打开的影片若已被删则自动落回列表。
+    const fv = window.filmsOpenView;
+    if (fv && !forceList) {
+      const stillThere = readStorage(STORAGE_KEYS.films, []).some(x => x.id === fv.id);
+      if (stillThere) {
+        if (fv.view === 'comments' && typeof window.showFilmComments === 'function') return window.showFilmComments(fv.id);
+        if (fv.view === 'detail' && typeof window.showFilmDetail === 'function') return window.showFilmDetail(fv.id);
+      }
+    }
+    window.filmsOpenView = null;   // 进入列表视图即清除“保持子视图”状态
     const all = readStorage(STORAGE_KEYS.films, []);
     const FILM_TABS = ['普法课堂', '民法典'];
     let active = sessionStorage.getItem('films_tab');
@@ -6990,18 +7038,19 @@
         alert('只有管理员可以编辑影片');
         return;
       }
-      const film = all.find(x => x.id === id);
+      const allFilms = readStorage(STORAGE_KEYS.films, []);
+      const film = allFilms.find(x => x.id === id);
       if (!film) return;
-      
+
       const title = prompt('影片标题', film.title);
       if (title === null) return;
       const desc = prompt('简介', film.desc);
       const duration = prompt('时长（如 20:00）', film.duration);
       const video = prompt('播放地址（B站链接 / BV号 / mp4直链，可留空）', film.video || '') || '';
 
-      const updated = all.map(x => x.id === id ? { ...x, title, desc, duration, video } : x);
+      const updated = allFilms.map(x => x.id === id ? { ...x, title, desc, duration, video } : x);
       writeStorage(STORAGE_KEYS.films, updated);
-      renderFilms();
+      renderFilms(true);
     };
 
     // 全局函数：删除影视
@@ -7013,11 +7062,12 @@
       }
       if (!confirm('确定要删除这部影片吗？')) return;
       markDeleted(STORAGE_KEYS.films, id);
-      renderFilms();
+      renderFilms(true);
     };
 
     // 全局函数：显示影片评论
     window.showFilmComments = (id) => {
+      window.filmsOpenView = { view: 'comments', id: id };   // 记住所在子视图，datasync 重渲时不踢回列表
       const films = readStorage(STORAGE_KEYS.films, []);
       const film = films.find(x => x.id === id);
       if (!film) return;
@@ -7028,7 +7078,7 @@
       setApp(html`
         <div class="film-comments-page">
           <div class="comments-header">
-            <button class="btn secondary" onclick="renderFilms()">← 返回影视</button>
+            <button class="btn secondary" onclick="renderFilms(true)">← 返回影视</button>
             <h2>${escapeHtml(film.title)} - 评论</h2>
           </div>
           <div class="comments-content">
@@ -7108,6 +7158,7 @@
 
     // 全局函数：显示影片详情
     window.showFilmDetail = (id) => {
+      window.filmsOpenView = { view: 'detail', id: id };     // 记住所在子视图，datasync 重渲时不踢回列表
       const films = readStorage(STORAGE_KEYS.films, []);
       const film = films.find(x => x.id === id);
       if (!film) return;
@@ -7118,7 +7169,7 @@
       setApp(html`
         <div class="film-detail-page">
           <div class="detail-header">
-            <button class="btn secondary" onclick="renderFilms()">← 返回影视</button>
+            <button class="btn secondary" onclick="renderFilms(true)">← 返回影视</button>
             <h1>${escapeHtml(film.title)}</h1>
             ${isAdmin ? html`
               <div class="admin-actions">
@@ -7386,8 +7437,16 @@
     };
   }
 
-  function renderNews() {
+  function renderNews(forceList) {
     if (!requireAuth()) return;
+    // 跨同步刷新保留要闻详情：datasync→navigate 重渲时停在当前详情、不踢回列表（对齐影视 filmsOpenView / 论坛 forumOpenPost）。
+    // 显式回列表传 forceList=true（“返回”按钮 / 编辑删除后）；打开的新闻若已被删则自动落回列表。
+    const openId = window.newsOpenId;
+    if (openId && !forceList) {
+      const stillThere = readStorage(STORAGE_KEYS.news, []).some(x => x.id === openId);
+      if (stillThere && typeof window.showNewsDetail === 'function') return window.showNewsDetail(openId);
+    }
+    window.newsOpenId = null;   // 进入列表视图即清除“保持详情”状态
     const all = readStorage(STORAGE_KEYS.news, []).slice().sort((a, b) => b.date.localeCompare(a.date));
     let currentFilter = 'all';
     let currentSort = 'date';
@@ -7611,9 +7670,11 @@
 
     // 全局函数：显示要闻详情
     window.showNewsDetail = (id) => {
-      const news = all.find(x => x.id === id);
+      const allNews = readStorage(STORAGE_KEYS.news, []).slice().sort((a, b) => b.date.localeCompare(a.date));
+      const news = allNews.find(x => x.id === id);
       if (!news) return;
-      
+      window.newsOpenId = id;   // 记住所在详情，datasync 重渲时不踢回列表（内容以最新 allNews 为准）
+
       const user = getAuth();
       const isAdmin = user && user.role === 'admin';
       
@@ -7623,7 +7684,7 @@
         .map(x => x.trim())
         .filter(Boolean)
         .slice(0, 3);
-      const relatedNews = all
+      const relatedNews = allNews
         .filter(x => x.id !== news.id)
         .filter(x => (x.tags || []).some(tag => (news.tags || []).includes(tag)))
         .slice(0, 3);
@@ -7631,7 +7692,7 @@
     setApp(html`
         <div class="news-detail-page">
           <div class="news-detail-header">
-            <button class="btn secondary" onclick="renderNews()">← 返回法治头条</button>
+            <button class="btn secondary" onclick="renderNews(true)">← 返回法治头条</button>
             <h1>${escapeHtml(news.title)}</h1>
             ${isAdmin ? html`
               <div class="admin-actions">
@@ -7703,7 +7764,7 @@
               <button class="btn primary" onclick="shareNews('${news.id}')">
                 <span>📤</span> 分享要闻
               </button>
-              <button class="btn secondary" onclick="renderNews()">
+              <button class="btn secondary" onclick="renderNews(true)">
                 <span>📰</span> 返回列表
               </button>
             </div>
@@ -7719,9 +7780,10 @@
         alert('只有管理员可以编辑要闻');
         return;
       }
-      const news = all.find(x => x.id === id);
+      const allNews = readStorage(STORAGE_KEYS.news, []).slice().sort((a, b) => b.date.localeCompare(a.date));
+      const news = allNews.find(x => x.id === id);
       if (!news) return;
-      
+
       const title = prompt('要闻标题', news.title);
       if (title === null) return;
       const date = prompt('发布日期（YYYY-MM-DD）', news.date);
@@ -7730,7 +7792,7 @@
       const source = prompt('原文链接（可留空）', news.source || '');
       const sourceName = prompt('信息来源名称（可留空）', news.sourceName || '');
 
-      const updated = all.map(x => x.id === id ? {
+      const updated = allNews.map(x => x.id === id ? {
         ...x,
         title,
         date,
@@ -7740,7 +7802,7 @@
         sourceName
       } : x);
       writeStorage(STORAGE_KEYS.news, updated);
-      renderNews();
+      renderNews(true);
     };
 
     // 全局函数：删除要闻
@@ -7752,14 +7814,14 @@
       }
       if (!confirm('确定要删除这条要闻吗？删除后无法恢复。')) return;
       markDeleted(STORAGE_KEYS.news, id);
-      renderNews();
+      renderNews(true);
     };
 
     // 全局函数：分享要闻
     window.shareNews = (id) => {
-      const news = all.find(x => x.id === id);
+      const news = readStorage(STORAGE_KEYS.news, []).find(x => x.id === id);
       if (!news) return;
-      
+
       const shareUrl = `${window.location.origin}${window.location.pathname}#/news?id=${id}`;
       const shareText = `法治头条：${news.title} - ${news.date}`;
       

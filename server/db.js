@@ -193,8 +193,12 @@ function readOwner(db, key, user) {
     case 'legal_messages':
       return (it) => it.fromUserId === uid || it.toUserId === uid;
     case 'legal_consultations':
+      // 咨询：本人发布 + 本人接单；另律师角色可见「待回复(pending)」业务池 —— 与前端 renderInteraction
+      // 律师视图过滤(status==='pending'||lawyerId===me)对齐，否则陌生人新咨询永远不下发律师
+      return (it) => it.userId === uid || it.lawyerId === uid || (user.role === 'lawyer' && it.status === 'pending');
     case 'legal_cases':
-      return (it) => it.userId === uid || it.lawyerId === uid;
+      // 案件：本人发布 + 本人接单；另律师角色可见「待接单(open)」业务池 —— 与前端律师视图过滤对齐
+      return (it) => it.userId === uid || it.lawyerId === uid || (user.role === 'lawyer' && it.status === 'open');
     case 'user_notifications':
       return (it) => it.toUserId === uid || it.userId === uid;
     case 'user_friends':

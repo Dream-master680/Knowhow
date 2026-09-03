@@ -103,6 +103,12 @@
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
   }
 
+  // 内容级比较：仅当服务端键数据真的变了才值得触发整页重渲
+  function dataEqual(a, b) {
+    if (a === b) return true;
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; }
+  }
+
   function loadMeta() {
     mtime = readRaw(MTIME_KEY, {}) || {};
     const d = readRaw(DIRTY_KEY, []);
@@ -312,12 +318,20 @@
       if (!isServerKey(k)) continue;
       if (dirty.has(k)) continue;                    // 本端有未推送写入，不覆盖（防丢新写）
       const serverAt = Number(v.updatedAt) || 0;
-      if (serverAt >= (mtime[k] || 0)) {             // LWW：服务端不旧于本地才覆盖
-        cache[k] = v.data;
-        writeRaw(k, v.data);
-        mtime[k] = serverAt;
-        changed = true;
+      if (serverAt < (mtime[k] || 0)) continue;      // LWW：服务端不旧于本地才覆盖
+      // 内容级守卫：时间戳相等≠内容变了（比如刚上线的并发写入、或自家写入的回声）。
+      // 旧代码 `>=` 把「时间戳相等」也判成变了 → 每次 poll 都 changed → 每 5s 整页重渲，
+      // 输入框被重建 = 闪跳/丢字/丢焦点（线上多人写入时尤其明显：本地单测不触发）。
+      const prev = cache[k];
+      const next = v.data;
+      if (dataEqual(prev, next)) {
+        if (serverAt > (mtime[k] || 0)) mtime[k] = serverAt;   // 内容没变：只对齐时间，不重渲
+        continue;
       }
+      cache[k] = next;
+      writeRaw(k, next);
+      mtime[k] = serverAt;
+      changed = true;
     }
     if (changed) {
       try { window.dispatchEvent(new CustomEvent('kh:datasync')); } catch (e) { /* ignore */ }
